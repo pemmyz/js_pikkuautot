@@ -1,0 +1,24 @@
+body {
+    display: flex;
+    flex-direction: column; /* Stack heading and canvas vertically */
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #333; /* Dark background for contrast */
+    overflow: hidden; /* Prevent scrollbars if canvas is large */
+}
+
+h1 {
+    color: #eee;
+    margin-bottom: 10px; /* Add some space below the heading */
+}
+
+canvas {
+    border: 1px solid black;
+    background-color: #0000ff; /* Blue background like the original fill */
+    /* Ensure canvas doesn't exceed viewport size */
+    max-width: 100%;
+    max-height: calc(100vh - 60px); /* Adjust based on heading size/margins */
+    display: block; /* Prevent extra space below canvas */
+}
