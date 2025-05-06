@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // MODIFIED OtherCar class
     class OtherCar extends Car {
         constructor(transformedImageCanvas, screenWidth, screenHeight, playerCar1, playerCar2) {
              super(transformedImageCanvas, screenWidth, screenHeight);
@@ -135,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
              this.counted = false; this.lastCollisionTimePlayer1 = 0; this.lastCollisionTimePlayer2 = 0;
              this.id = Math.random(); this.stuckTime = 0; this.lastPosition = {x: this.x, y: this.y};
              this.stuckCheckCounter = 0;
-             this.isExiting = false; // <<<--- ADDED isExiting flag
+             this.isExiting = false; // Flag for exiting state
         }
 
         moveLeft(speed) {
@@ -143,33 +142,28 @@ document.addEventListener('DOMContentLoaded', () => {
             this.x -= speed; // Move left first
 
             // Set isExiting flag if crossing the threshold (near x=0)
-            if (!this.isExiting && this.x < 1) { // <<<--- SET isExiting FLAG
+            if (!this.isExiting && this.x < 1) {
                 this.isExiting = true;
             }
 
-            // Anti-Stuck Logic
+            // Anti-Stuck Logic (respects isExiting flag)
             this.stuckCheckCounter++;
             if (this.stuckCheckCounter > 10) {
                  this.stuckCheckCounter = 0;
                  if (Math.abs(this.x - this.lastPosition.x) < 1 && Math.abs(this.y - this.lastPosition.y) < 1) { this.stuckTime++; }
                  else { this.stuckTime = 0; }
-
                  if (this.stuckTime > 3) {
-                     // Only apply nudge logic if NOT exiting
-                     if (!this.isExiting) { // <<<--- CHECK isExiting FLAG
-                         this.y += getRandomInt(-15, 15); // Vertical nudge
-                         if (this.x > 20) { // Only horizontal nudge if not near edge
-                             this.x += getRandomInt(5, 15);
-                         }
+                     if (!this.isExiting) { // Only nudge if not exiting
+                         this.y += getRandomInt(-15, 15);
+                         if (this.x > 20) { this.x += getRandomInt(5, 15); }
                          this.clampToScreen();
                          this.lastPosition = {x: this.x, y: this.y};
                      }
-                     // Reset stuck timer regardless (either nudged or exiting)
                      this.stuckTime = 0;
                  }
             }
         }
-        draw(ctx) { super.draw(ctx); } // Draw method remains the same visually
+        draw(ctx) { super.draw(ctx); }
     }
 
     class Bullet {
@@ -227,20 +221,16 @@ document.addEventListener('DOMContentLoaded', () => {
             this.playerCar2.move(moveX2, moveY2); this.playerCar2.clampToScreen();
         }
 
-        // moveOtherCars - uses original removal condition (x + width < 0)
+        // moveOtherCars uses original removal condition (x + width < 0)
         moveOtherCars() {
              let newlyOffScreenCount = 0;
              const carIndicesToRemove = new Set();
              this.otherCars.forEach((car, index) => {
                  car.moveLeft(this.otherCarSpeed); // Move first, potentially setting isExiting flag
-
-                 // Check if the car's RIGHT edge (x + width) has moved past the left edge (0)
+                 // Check if the car's RIGHT edge has moved past the left edge
                  if (car.x + car.width < 0) {
-                     if (!car.counted) {
-                         car.counted = true;
-                         newlyOffScreenCount++;
-                     }
-                     carIndicesToRemove.add(index); // Mark for removal
+                     if (!car.counted) { car.counted = true; newlyOffScreenCount++; }
+                     carIndicesToRemove.add(index);
                  }
              });
              if (newlyOffScreenCount > 0) { this.carsOutOfScreen += newlyOffScreenCount; }
@@ -249,21 +239,40 @@ document.addEventListener('DOMContentLoaded', () => {
              }
         }
 
-        // MODIFIED separateCars - checks isExiting flag
-        separateCars(car1, car2) {
-            // Skip separation if either car is already exiting
-            if (car1.isExiting || car2.isExiting) { // <<<--- CHECK isExiting FLAG
-                return;
-            }
+        // MODIFIED separateCars - handles exiting enemies conditionally
+        separateCars(obj1, obj2) {
+            // Skip separation *only* if both are enemies and one is exiting
+             if (obj1 instanceof OtherCar && obj2 instanceof OtherCar && (obj1.isExiting || obj2.isExiting)) {
+                 return;
+             }
 
-            // Original separation logic
-            const rect1 = car1.getRect(); const rect2 = car2.getRect(); if (!rect1 || !rect2) return;
+            const rect1 = obj1.getRect(); const rect2 = obj2.getRect(); if (!rect1 || !rect2) return;
             const dx = (rect1.x + rect1.width / 2) - (rect2.x + rect2.width / 2); const dy = (rect1.y + rect1.height / 2) - (rect2.y + rect2.height / 2);
             const combinedHalfWidths = rect1.width / 2 + rect2.width / 2; const combinedHalfHeights = rect1.height / 2 + rect2.height / 2;
-            if (Math.abs(dx) < combinedHalfWidths && Math.abs(dy) < combinedHalfHeights) { const overlapX = combinedHalfWidths - Math.abs(dx); const overlapY = combinedHalfHeights - Math.abs(dy); const separationFactor = 0.6; let moveX = 0, moveY = 0;
+
+            if (Math.abs(dx) < combinedHalfWidths && Math.abs(dy) < combinedHalfHeights) {
+                const overlapX = combinedHalfWidths - Math.abs(dx); const overlapY = combinedHalfHeights - Math.abs(dy);
+                const separationFactor = 0.6; let moveX = 0, moveY = 0;
                 if (overlapX < overlapY) { moveX = (overlapX / 2) * separationFactor * Math.sign(dx); if (Math.abs(dx) < 5) moveY = (Math.random() - 0.5) * 4; } else { moveY = (overlapY / 2) * separationFactor * Math.sign(dy); if (Math.abs(dy) < 5) moveX = (Math.random() - 0.5) * 4; }
-                car1.x += moveX; car1.y += moveY; car2.x -= moveX; car2.y -= moveY;
-                if (typeof car1.clampToScreen === 'function') car1.clampToScreen(); if (typeof car2.clampToScreen === 'function') car2.clampToScreen();
+
+                // Conditional application based on exiting state
+                const obj1IsExitingEnemy = (obj1 instanceof OtherCar && obj1.isExiting);
+                const obj2IsExitingEnemy = (obj2 instanceof OtherCar && obj2.isExiting);
+
+                if (obj1IsExitingEnemy) { // obj1 is exiting enemy, push obj2 fully
+                    obj2.x -= moveX * 2; obj2.y -= moveY * 2;
+                } else if (obj2IsExitingEnemy) { // obj2 is exiting enemy, push obj1 fully
+                    obj1.x += moveX * 2; obj1.y += moveY * 2;
+                } else { // Normal separation (neither is exiting enemy)
+                    obj1.x += moveX; obj1.y += moveY;
+                    obj2.x -= moveX; obj2.y -= moveY;
+                }
+
+                // Clamp players and non-exiting enemies after potential move
+                if (obj1 === this.playerCar1 || obj1 === this.playerCar2) { if (typeof obj1.clampToScreen === 'function') obj1.clampToScreen(); }
+                if (obj2 === this.playerCar1 || obj2 === this.playerCar2) { if (typeof obj2.clampToScreen === 'function') obj2.clampToScreen(); }
+                if (obj1 instanceof OtherCar && !obj1.isExiting && typeof obj1.clampToScreen === 'function') { obj1.clampToScreen(); }
+                if (obj2 instanceof OtherCar && !obj2.isExiting && typeof obj2.clampToScreen === 'function') { obj2.clampToScreen(); }
             }
         }
 
@@ -271,15 +280,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const now = performance.now();
             this.otherCars.forEach(otherCar => {
                 // Check P1 vs Enemy (uses modified separateCars)
-                if (checkCollision(this.playerCar1.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer1 > this.collisionCooldown) { this.player1CollisionCount++; otherCar.lastCollisionTimePlayer1 = now; } this.separateCars(this.playerCar1, otherCar); }
+                if (checkCollision(this.playerCar1.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer1 > this.collisionCooldown) { this.player1CollisionCount++; otherCar.lastCollisionTimePlayer1 = now; } this.separateCars(this.playerCar1, otherCar); } // Pass correct objects
                 // Check P2 vs Enemy (uses modified separateCars)
-                if (checkCollision(this.playerCar2.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer2 > this.collisionCooldown) { this.player2CollisionCount++; otherCar.lastCollisionTimePlayer2 = now; } this.separateCars(this.playerCar2, otherCar); }
+                if (checkCollision(this.playerCar2.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer2 > this.collisionCooldown) { this.player2CollisionCount++; otherCar.lastCollisionTimePlayer2 = now; } this.separateCars(this.playerCar2, otherCar); } // Pass correct objects
             });
-            // Check P1 vs P2 (uses modified separateCars - though isExiting won't apply here)
+            // Check P1 vs P2 (uses modified separateCars - will use normal separation)
             if (checkCollision(this.playerCar1.getRect(), this.playerCar2.getRect())) { this.separateCars(this.playerCar1, this.playerCar2); }
-            // Check Enemy vs Enemy (uses modified separateCars)
+            // Check Enemy vs Enemy (uses modified separateCars - will skip if one is exiting)
             for (let i = 0; i < this.otherCars.length; i++) { for (let j = i + 1; j < this.otherCars.length; j++) { const carI = this.otherCars[i]; const carJ = this.otherCars[j]; const dy = Math.abs((carI.y + carI.height / 2) - (carJ.y + carJ.height / 2)); if (dy < (carI.height + carJ.height)) { if (checkCollision(carI.getRect(), carJ.getRect())) { this.separateCars(carI, carJ); } } } }
         }
+
         checkBulletCollisions() {
             const bulletsToRemoveCar1 = new Set(); const bulletsToRemoveCar2 = new Set(); const carIndicesToRemove = new Set();
             this.bulletsCar1.forEach((bullet, bulletIndex) => { bullet.update(); if (bullet.x > this.screenWidth) { bulletsToRemoveCar1.add(bulletIndex); } else { this.otherCars.forEach((car, carIndex) => { if (!carIndicesToRemove.has(carIndex) && !car.isExiting && checkCollision(bullet.getRect(), car.getRect())) { bulletsToRemoveCar1.add(bulletIndex); carIndicesToRemove.add(carIndex); this.carsRemovedByCar1++; return; } }); } }); // Added !car.isExiting check
