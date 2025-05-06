@@ -1,7 +1,7 @@
 # js_pikkuautot
 ---
 
-# 🚗 Car Dodging Game (2-Player) – JavaScript + HTML5
+# 🚗 Pikkuautot (2-Player) – JavaScript + HTML5
 
 A chaotic two-player top-down driving game built using **JavaScript** and **HTML5 Canvas**. Players control their cars, avoid oncoming traffic, shoot bullets, and compete by dodging or destroying enemy cars. The game features dynamic spawning, smooth animations, collision detection, and live stat tracking — all running directly in the browser.
 
