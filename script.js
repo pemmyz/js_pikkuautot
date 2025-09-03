@@ -47,11 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
 
-    // --- GAMEPAD STATE & LOGIC (NEW) ---
+    // --- GAMEPAD STATE & LOGIC (MODIFIED FOR AUTOFIRE) ---
     let player1GamepadIndex = null;
     let player2GamepadIndex = null;
     const gamepadAssignmentCooldown = {};
-    const lastGamepadButtonState = { p1: [], p2: [] };
     const FACE_BUTTON_INDICES = [0, 1, 2, 3]; // A, B, X, Y (standard layout)
 
     function pollGamepads() {
@@ -71,17 +70,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (player1GamepadIndex === null) {
                     player1GamepadIndex = i;
                     console.log(`Gamepad ${i} (${pad.id}) assigned to Player 1.`);
-                    lastGamepadButtonState.p1 = new Array(pad.buttons.length).fill(false);
                 } else if (player2GamepadIndex === null) {
                     player2GamepadIndex = i;
                     console.log(`Gamepad ${i} (${pad.id}) assigned to Player 2.`);
-                    lastGamepadButtonState.p2 = new Array(pad.buttons.length).fill(false);
                 }
                 // Cooldown to prevent assigning to both players on one press
                 gamepadAssignmentCooldown[i] = true;
                 setTimeout(() => delete gamepadAssignmentCooldown[i], 1000);
             }
         }
+        
+        // --- Clear previous frame's gamepad shoot state ---
+        keysPressed['gp_shoot_p1'] = false;
+        keysPressed['gp_shoot_p2'] = false;
 
         // --- Step 2: Player 1 Input ---
         if (player1GamepadIndex !== null) {
@@ -94,13 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
             keysPressed['arrowleft'] = pad.buttons[14]?.pressed;
             keysPressed['arrowright'] = pad.buttons[15]?.pressed;
 
-            // Shooting (rising edge detection)
+            // Shooting (Autofire)
             const shootPressedNow = FACE_BUTTON_INDICES.some(index => pad.buttons[index]?.pressed);
-            const shootPressedLast = FACE_BUTTON_INDICES.some(index => lastGamepadButtonState.p1[index]);
-            keysPressed['gp_shoot_p1'] = shootPressedNow && !shootPressedLast;
-
-            // Update last state for next frame
-            pad.buttons.forEach((button, index) => lastGamepadButtonState.p1[index] = button.pressed);
+            keysPressed['gp_shoot_p1'] = shootPressedNow;
         }
 
         // --- Step 3: Player 2 Input ---
@@ -114,17 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
             keysPressed['a'] = pad.buttons[14]?.pressed;
             keysPressed['d'] = pad.buttons[15]?.pressed;
             
-            // Shooting (rising edge detection)
+            // Shooting (Autofire)
             const shootPressedNow = FACE_BUTTON_INDICES.some(index => pad.buttons[index]?.pressed);
-            const shootPressedLast = FACE_BUTTON_INDICES.some(index => lastGamepadButtonState.p2[index]);
-            keysPressed['gp_shoot_p2'] = shootPressedNow && !shootPressedLast;
-
-            // Update last state for next frame
-            pad.buttons.forEach((button, index) => lastGamepadButtonState.p2[index] = button.pressed);
+            keysPressed['gp_shoot_p2'] = shootPressedNow;
         }
     }
 
-    // --- GAMEPAD CONNECTION LISTENERS (NEW) ---
+    // --- GAMEPAD CONNECTION LISTENERS ---
     window.addEventListener("gamepadconnected", (e) => {
         console.log(`Gamepad connected at index ${e.gamepad.index}: ${e.gamepad.id}. Press a face button to assign.`);
     });
