@@ -1,6 +1,23 @@
 // Wait until the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
+    const helpMenu = document.getElementById('helpMenu');
+    const helpButton = document.getElementById('helpButton');
+    let isGamePaused = false;
+
+    // --- Reusable function to toggle help menu and game pause state ---
+    function toggleHelp() {
+        isGamePaused = !isGamePaused;
+        helpMenu.classList.toggle('hidden');
+
+        // When pausing, clear all currently pressed keys to prevent "stuck" movement
+        if (isGamePaused) {
+            for (const k in keysPressed) {
+                keysPressed[k] = false;
+            }
+        }
+    }
+
     // --- Constants ---
     const SCREEN_WIDTH = 1920;
     const SCREEN_HEIGHT = 1010;
@@ -42,10 +59,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Input Handling ---
     const keysPressed = {};
     window.addEventListener('keydown', (e) => {
-        keysPressed[e.key.toLowerCase()] = true;
-        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'f', 'r'].includes(e.key.toLowerCase())) { e.preventDefault(); }
+        const key = e.key.toLowerCase();
+
+        // Prevent default browser actions for game keys
+        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'f', 'r', 'h'].includes(key)) {
+            e.preventDefault();
+        }
+
+        // Handle pause toggle separately
+        if (key === 'h') {
+            toggleHelp();
+            return; // Don't process 'h' as a game input
+        }
+
+        // Only process game input if not paused
+        if (!isGamePaused) {
+            keysPressed[key] = true;
+        }
     });
-    window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
+
+    window.addEventListener('keyup', (e) => {
+        // Always allow keyup to register to prevent stuck keys when pausing/unpausing
+        keysPressed[e.key.toLowerCase()] = false;
+    });
+
+    // Add click listener for the help button
+    helpButton.addEventListener('click', toggleHelp);
+
 
     // --- GAMEPAD STATE & LOGIC (MODIFIED FOR AUTOFIRE) ---
     let player1GamepadIndex = null;
@@ -83,6 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Clear previous frame's gamepad shoot state ---
         keysPressed['gp_shoot_p1'] = false;
         keysPressed['gp_shoot_p2'] = false;
+        
+        // Don't process movement/shooting if paused
+        if (isGamePaused) return;
 
         // --- Step 2: Player 1 Input ---
         if (player1GamepadIndex !== null) {
@@ -206,7 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
         draw() { ctx.fillStyle = '#3333AA'; ctx.fillRect(0, 0, this.screenWidth, this.screenHeight); this.roadMarkings.forEach(marking => marking.draw(ctx)); this.otherCars.forEach(car => car.draw(ctx)); this.playerCar1.draw(ctx); this.playerCar2.draw(ctx); this.bulletsCar1.forEach(bullet => bullet.draw(ctx)); this.bulletsCar2.forEach(bullet => bullet.draw(ctx)); const now = performance.now(); const timePlayedSeconds = Math.floor((now - this.startTime) / 1000); const hours = Math.floor(timePlayedSeconds / 3600); const minutes = Math.floor((timePlayedSeconds % 3600) / 60); const seconds = timePlayedSeconds % 60; this.updateFpsCounter(now); let yPos = 30; const lineH = 28; this.drawText(`Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, 10, yPos); yPos += lineH; this.drawText(`P1 Hits: ${this.carsRemovedByCar1}`, 10, yPos); yPos += lineH; this.drawText(`P2 Hits: ${this.carsRemovedByCar2}`, 10, yPos); yPos += lineH; this.drawText(`Cars Offscreen: ${this.carsOutOfScreen}`, 10, yPos); yPos += lineH; this.drawText(`Cars On Screen: ${this.otherCars.length} / ${MAX_CARS}`, 10, yPos); yPos += lineH; this.drawText(`P1 Collisions: ${this.player1CollisionCount}`, 10, yPos); yPos += lineH; this.drawText(`P2 Collisions: ${this.player2CollisionCount}`, 10, yPos); yPos += lineH; this.drawText(`FPS: ${this.fps.toFixed(1)}`, 10, yPos); yPos += lineH; this.drawText(`P1 Bullets: ${this.bulletsCar1.length}`, 10, yPos); yPos += lineH; this.drawText(`P2 Bullets: ${this.bulletsCar2.length}`, 10, yPos); yPos += lineH; }
         update() { this.handlePlayerInput(); this.moveOtherCars(); this.roadMarkings.forEach(m => m.moveLeft(this.otherCarSpeed * 1.2)); this.checkCollisions(); this.checkBulletCollisions(); this.loadNewCars(); }
         gameLoop(timestamp) {
-            pollGamepads(); // Poll gamepad state at the start of each frame
+            // Poll gamepad state every frame, even when paused.
+            pollGamepads();
+
+            // If the game is paused, skip the update and draw loops.
+            if (isGamePaused) {
+                requestAnimationFrame(this.gameLoop.bind(this)); // Keep the loop alive
+                return;
+            }
+
             this.update();
             this.draw();
             requestAnimationFrame(this.gameLoop.bind(this));

@@ -1,38 +1,118 @@
 body {
     display: flex;
-    flex-direction: column; /* Stack heading and canvas vertically */
     justify-content: center;
     align-items: center;
     height: 100vh;
     margin: 0;
-    background-color: #333; /* Dark background for contrast */
-    overflow: hidden; /* Prevent scrollbars if canvas is large */
+    background-color: #333;
+    overflow: hidden;
     font-family: sans-serif;
     color: #eee;
 }
 
-h1 {
-    color: #eee;
-    margin-bottom: 10px; /* Add some space below the heading */
+#gameContainer {
+    position: relative; /* Establishes a positioning context for children */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-.controls {
+#gameHeader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    display: flex;
+    justify-content: center; /* Center the main child (the h1) */
+    align-items: center;
+    padding: 15px 25px;
+    box-sizing: border-box;
+    /* Allows clicks to pass through the header area to the canvas below */
+    pointer-events: none;
+}
+
+h1 {
+    margin: 0;
+    color: #eee;
+    font-size: 2em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+    opacity: 0.7; /* Make the title 70% opaque (30% transparent) */
+}
+
+#helpButton {
+    /* Position absolutely relative to the header */
+    position: absolute;
+    right: 25px; /* Align with header's right padding */
+    top: 50%; /* Center vertically within the header bar */
+    transform: translateY(-50%); /* Fine-tune vertical alignment */
+
+    /* Re-enable pointer events so the button can be clicked */
+    pointer-events: auto;
+
+    background-color: rgba(0,0,0,0.5);
+    border: 1px solid #777;
     color: #ccc;
-    font-size: 0.9em;
-    text-align: center;
-    line-height: 1.5;
-    margin-bottom: 15px;
-    padding: 5px 10px;
-    border: 1px solid #555;
+    padding: 8px 16px;
     border-radius: 5px;
-    background-color: rgba(0,0,0,0.2);
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#helpButton:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+
+#helpMenu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(30, 30, 30, 0.95);
+    border: 2px solid #aaa;
+    border-radius: 10px;
+    padding: 20px 40px;
+    color: #eee;
+    text-align: left;
+    z-index: 200; /* Ensure it's on top of everything */
+    min-width: 300px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    line-height: 1.8;
+}
+
+#helpMenu h2 {
+    margin-top: 0;
+    text-align: center;
+    color: white;
+    border-bottom: 1px solid #555;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+#helpMenu hr {
+    border: 0;
+    border-top: 1px solid #555;
+    margin: 15px 0;
+}
+
+#helpMenu .close-help {
+    margin-top: 20px;
+    font-size: 0.9em;
+    color: #aaa;
+    text-align: center;
+}
+
+.hidden {
+    display: none;
 }
 
 canvas {
     border: 1px solid black;
-    background-color: #0000ff; /* Blue background like the original fill */
-    /* Ensure canvas doesn't exceed viewport size */
+    background-color: #0000ff;
     max-width: 100%;
-    max-height: calc(100vh - 120px); /* Adjust based on heading/text size/margins */
-    display: block; /* Prevent extra space below canvas */
+    max-height: 100vh; /* Allow canvas to fill the container */
+    display: block;
 }

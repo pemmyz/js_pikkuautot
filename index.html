@@ -1,18 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF--8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pikkuautot (HTML5 Canvas)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Pikkuautot</h1>
-    <p class="controls">
-        <b>P1:</b> Arrows (Move), Space (Shoot) | <b>P2:</b> WASD (Move), F (Shoot)<br>
-        <b>Gamepad:</b> Press any face button (A,B,X,Y) to assign. D-Pad (Move), Any Face Button (Shoot).
-    </p>
-    <canvas id="gameCanvas"></canvas>
+    <div id="gameContainer">
+        <!-- This header is an overlay on top of the canvas -->
+        <div id="gameHeader">
+            <h1>Pikkuautot</h1>
+            <button id="helpButton">Help (H)</button>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- The help menu is also an overlay -->
+        <div id="helpMenu" class="hidden">
+            <h2>Controls</h2>
+            <p><b>P1:</b> Arrows (Move), Space (Shoot)</p>
+            <p><b>P2:</b> WASD (Move), F (Shoot)</p>
+            <hr>
+            <p><b>Gamepad:</b> Press any face button (A,B,X,Y) to assign. D-Pad (Move), Any Face Button (Shoot).</p>
+            <p class="close-help">(Press H or click button to close)</p>
+        </div>
+    </div>
+
     <!-- Important: defer ensures script runs after HTML is parsed -->
     <script src="script.js" defer></script>
 </body>
