@@ -40,16 +40,19 @@ h1 {
     opacity: 0.7; /* Make the title 70% opaque (30% transparent) */
 }
 
-#helpButton {
-    /* Position absolutely relative to the header */
+#headerButtons {
+    /* This container will hold our buttons */
     position: absolute;
     right: 25px; /* Align with header's right padding */
     top: 50%; /* Center vertically within the header bar */
     transform: translateY(-50%); /* Fine-tune vertical alignment */
+    display: flex;
+    gap: 10px; /* Space between buttons */
+    pointer-events: auto; /* Re-enable pointer events for the container */
+}
 
-    /* Re-enable pointer events so the button can be clicked */
-    pointer-events: auto;
 
+#helpButton, #customizeButton {
     background-color: rgba(0,0,0,0.5);
     border: 1px solid #777;
     color: #ccc;
@@ -60,13 +63,13 @@ h1 {
     transition: background-color 0.2s, color 0.2s;
 }
 
-#helpButton:hover {
+#helpButton:hover, #customizeButton:hover {
     background-color: rgba(255, 255, 255, 0.2);
     color: #fff;
 }
 
 
-#helpMenu {
+.menu-overlay { /* Renamed from #helpMenu to be reusable */
     position: absolute;
     top: 50%;
     left: 50%;
@@ -78,12 +81,12 @@ h1 {
     color: #eee;
     text-align: left;
     z-index: 200; /* Ensure it's on top of everything */
-    min-width: 300px;
+    min-width: 350px;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     line-height: 1.8;
 }
 
-#helpMenu h2 {
+.menu-overlay h2 {
     margin-top: 0;
     text-align: center;
     color: white;
@@ -92,17 +95,62 @@ h1 {
     margin-bottom: 15px;
 }
 
-#helpMenu hr {
+.menu-overlay hr {
     border: 0;
     border-top: 1px solid #555;
-    margin: 15px 0;
+    margin: 20px 0;
 }
 
-#helpMenu .close-help {
+.menu-overlay .close-help, .menu-overlay .close-customize {
     margin-top: 20px;
     font-size: 0.9em;
     color: #aaa;
     text-align: center;
+}
+
+/* Customization Menu Specific Styles */
+#customizeMenu {
+    min-width: 450px;
+}
+
+.setting-row, .slider-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.slider-container label {
+    flex-basis: 40%;
+}
+
+.slider-container input[type="range"] {
+    flex-grow: 1;
+    margin: 0 10px;
+}
+
+.slider-value {
+    min-width: 40px;
+    text-align: right;
+    font-weight: bold;
+    color: #aed6f1;
+}
+
+#newGameButton {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    background-color: #28a745;
+    border: 1px solid #218838;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#newGameButton:hover {
+    background-color: #218838;
 }
 
 .hidden {

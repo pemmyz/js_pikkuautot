@@ -1,28 +1,79 @@
 // Wait until the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- Menu Elements ---
     const helpMenu = document.getElementById('helpMenu');
     const helpButton = document.getElementById('helpButton');
+    const customizeMenu = document.getElementById('customizeMenu');
+    const customizeButton = document.getElementById('customizeButton');
+    const newGameButton = document.getElementById('newGameButton');
+    
+    // --- Customization UI Elements ---
+    const presetSelect = document.getElementById('presetSelect');
+    const slidersContainer = document.getElementById('slidersContainer');
+    const separationSlider = document.getElementById('separationSlider');
+    const playerSpeedSlider = document.getElementById('playerSpeedSlider');
+    const enemySpeedSlider = document.getElementById('enemySpeedSlider');
+    const cooldownSlider = document.getElementById('cooldownSlider');
+    const separationValue = document.getElementById('separationValue');
+    const playerSpeedValue = document.getElementById('playerSpeedValue');
+    const enemySpeedValue = document.getElementById('enemySpeedValue');
+    const cooldownValue = document.getElementById('cooldownValue');
+
+
     let isGamePaused = false;
+    let activeMenu = null;
 
-    // --- Reusable function to toggle help menu and game pause state ---
-    function toggleHelp() {
-        isGamePaused = !isGamePaused;
-        helpMenu.classList.toggle('hidden');
+    // --- Physics Settings ---
+    const originalPhysicsSettings = {
+        carSpeed: 15,
+        otherCarSpeed: 3,
+        separationFactor: 0.6, // New constant for push-back strength
+        collisionCooldown: 150,
+    };
+    let currentPhysicsSettings = { ...originalPhysicsSettings };
 
-        // When pausing, clear all currently pressed keys to prevent "stuck" movement
+    // --- Game State Management ---
+    let game; // Will hold the current game instance
+    let transformedAssetData = {}; // To store pre-processed images for restarts
+    let isInitialLoad = true;
+
+
+    // --- Menu Toggling Logic ---
+    function togglePause(shouldPause) {
+        isGamePaused = shouldPause;
         if (isGamePaused) {
+            // Clear all currently pressed keys to prevent "stuck" movement
             for (const k in keysPressed) {
                 keysPressed[k] = false;
             }
         }
     }
 
+    function closeAllMenus() {
+        helpMenu.classList.add('hidden');
+        customizeMenu.classList.add('hidden');
+        if (activeMenu) {
+            togglePause(false);
+            activeMenu = null;
+        }
+    }
+    
+    function toggleMenu(menuElement) {
+        const isOpening = menuElement.classList.contains('hidden');
+        
+        closeAllMenus(); // Close everything first
+
+        if (isOpening) {
+            menuElement.classList.remove('hidden');
+            togglePause(true);
+            activeMenu = menuElement;
+        }
+    }
+
     // --- Constants ---
     const SCREEN_WIDTH = 1920;
     const SCREEN_HEIGHT = 1080;
-    const CAR_SPEED = 15;          // Player car speed
-    const OTHER_CAR_SPEED = 3;     // Enemy car speed
     const MAX_CARS = 60;           // Target maximum number of enemy cars on screen
     const IMAGE_SCALE = 1 / 3;     // Scale factor for car images
     const PLAYER_CAR_ROTATION_DEGREES = -90; // Rotation for player cars (adjust if needed)
@@ -60,16 +111,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const keysPressed = {};
     window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
-
+        
         // Prevent default browser actions for game keys
-        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'f', 'r', 'h'].includes(key)) {
+        if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd', 'f', 'r', 'h', 'c'].includes(key)) {
             e.preventDefault();
         }
 
-        // Handle pause toggle separately
+        // Handle menu toggles
         if (key === 'h') {
-            toggleHelp();
-            return; // Don't process 'h' as a game input
+            toggleMenu(helpMenu);
+            return;
+        }
+        if (key === 'c') {
+            toggleMenu(customizeMenu);
+            return;
         }
 
         // Only process game input if not paused
@@ -83,9 +138,9 @@ document.addEventListener('DOMContentLoaded', () => {
         keysPressed[e.key.toLowerCase()] = false;
     });
 
-    // Add click listener for the help button
-    helpButton.addEventListener('click', toggleHelp);
-
+    // --- Menu Event Listeners ---
+    helpButton.addEventListener('click', () => toggleMenu(helpMenu));
+    customizeButton.addEventListener('click', () => toggleMenu(customizeMenu));
 
     // --- GAMEPAD STATE & LOGIC (MODIFIED FOR AUTOFIRE) ---
     let player1GamepadIndex = null;
@@ -189,16 +244,26 @@ document.addEventListener('DOMContentLoaded', () => {
     class Bullet { constructor(x, y, speed) { this.x = x; this.y = y; this.speed = speed; this.width = 10; this.height = 5; this.color = 'red'; this.id = Math.random(); } getRect() { return { x: this.x, y: this.y, width: this.width, height: this.height }; } update() { this.x += this.speed; } draw(ctx) { ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.width, this.height); } }
     class RoadMarking { constructor(initialX, positionY, screenWidth) { this.screenWidth = screenWidth; this.width = 80; this.height = 10; this.color = 'white'; this.x = initialX; this.y = positionY; } moveLeft(speed) { this.x -= speed; if (this.x + this.width < 0) { this.x += this.screenWidth * 1.5 + Math.random() * 200; } } draw(ctx) { ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.width, this.height); } }
     class Game {
-        constructor(screenWidth, screenHeight, carSpeed, otherCarSpeed, player1ImgData, player2ImgData, enemyImagesData) {
+        constructor(settings) {
+            // Destructure settings
+            const {
+                screenWidth, screenHeight, carSpeed, otherCarSpeed, separationFactor,
+                collisionCooldown, player1ImgData, player2ImgData, enemyImagesData
+            } = settings;
+
             this.screenWidth = screenWidth; this.screenHeight = screenHeight; this.carSpeed = carSpeed; this.otherCarSpeed = otherCarSpeed;
+            this.separationFactor = separationFactor; // Use the new setting
+            this.collisionCooldown = collisionCooldown; // Use the new setting
+            
             this.playerCar1 = new Car(player1ImgData, screenWidth, screenHeight); this.playerCar2 = new Car(player2ImgData, screenWidth, screenHeight);
             this.playerCar1.x = 100; this.playerCar1.y = screenHeight / 2 - player1ImgData.height - 20; this.playerCar2.x = 100; this.playerCar2.y = screenHeight / 2 + 20;
             this.enemyImagesData = enemyImagesData; this.availableEnemyImageData = [...this.enemyImagesData]; this.otherCars = [];
             this.bulletsCar1 = []; this.bulletsCar2 = []; this.maxBullets = 45; this.lastShotTimeCar1 = 0; this.lastShotTimeCar2 = 0; this.shotCooldown = 150;
-            this.carsRemovedByCar1 = 0; this.carsRemovedByCar2 = 0; this.carsOutOfScreen = 0; this.player1CollisionCount = 0; this.player2CollisionCount = 0; this.collisionCooldown = 150;
+            this.carsRemovedByCar1 = 0; this.carsRemovedByCar2 = 0; this.carsOutOfScreen = 0; this.player1CollisionCount = 0; this.player2CollisionCount = 0;
             this.startTime = performance.now(); this.frameCount = 0; this.fps = 0; this.lastFpsUpdate = performance.now();
             this.lastOtherCarLoadTime = 0; this.otherCarLoadInterval = 200;
             this.roadMarkings = []; this.setupRoadMarkings();
+            this.animationFrameId = null; // To hold the requestAnimationFrame ID
         }
         setupRoadMarkings() { const numLanes = 5; const laneHeight = this.screenHeight / numLanes; const markingSpacing = 250; const markingsPerScreenRoughly = Math.ceil(this.screenWidth / markingSpacing) + 4; for (let i = 0; i < numLanes; i++) { const laneY = (i * laneHeight) + (laneHeight / 2) - 5; for (let j = 0; j < markingsPerScreenRoughly; j++) { const initialX = (j * markingSpacing) - (markingSpacing * 2); this.roadMarkings.push(new RoadMarking(initialX, laneY, this.screenWidth)); } } }
         updateFpsCounter(now) { this.frameCount++; const elapsed = now - this.lastFpsUpdate; if (elapsed >= 1000) { this.fps = (this.frameCount * 1000) / elapsed; this.frameCount = 0; this.lastFpsUpdate = now; } }
@@ -242,41 +307,112 @@ document.addEventListener('DOMContentLoaded', () => {
             if (keysPressed['r']) { this.playerCar1.x = 100; this.playerCar1.y = this.screenHeight / 2 - this.playerCar1.height - 20; this.playerCar2.x = 100; this.playerCar2.y = this.screenHeight / 2 + 20; this.bulletsCar1 = []; this.bulletsCar2 = []; }
         }
         moveOtherCars() { let newlyOffScreenCount = 0; const carIndicesToRemove = new Set(); this.otherCars.forEach((car, index) => { car.moveLeft(this.otherCarSpeed); if (car.x + car.width < 0) { if (!car.counted) { car.counted = true; newlyOffScreenCount++; } carIndicesToRemove.add(index); } }); if (newlyOffScreenCount > 0) { this.carsOutOfScreen += newlyOffScreenCount; } if (carIndicesToRemove.size > 0) { this.otherCars = this.otherCars.filter((_, index) => !carIndicesToRemove.has(index)); } }
-        separateCars(obj1, obj2) { if (obj1 instanceof OtherCar && obj2 instanceof OtherCar && (obj1.isExiting || obj2.isExiting)) { return; } const rect1 = obj1.getRect(); const rect2 = obj2.getRect(); if (!rect1 || !rect2) return; const dx = (rect1.x + rect1.width / 2) - (rect2.x + rect2.width / 2); const dy = (rect1.y + rect1.height / 2) - (rect2.y + rect2.height / 2); const combinedHalfWidths = rect1.width / 2 + rect2.width / 2; const combinedHalfHeights = rect1.height / 2 + rect2.height / 2; if (Math.abs(dx) < combinedHalfWidths && Math.abs(dy) < combinedHalfHeights) { const overlapX = combinedHalfWidths - Math.abs(dx); const overlapY = combinedHalfHeights - Math.abs(dy); const separationFactor = 0.6; let moveX = 0, moveY = 0; if (overlapX < overlapY) { moveX = (overlapX / 2) * separationFactor * Math.sign(dx); if (Math.abs(dx) < 5) moveY = (Math.random() - 0.5) * 4; } else { moveY = (overlapY / 2) * separationFactor * Math.sign(dy); if (Math.abs(dy) < 5) moveX = (Math.random() - 0.5) * 4; } const obj1IsExitingEnemy = (obj1 instanceof OtherCar && obj1.isExiting); const obj2IsExitingEnemy = (obj2 instanceof OtherCar && obj2.isExiting); if (obj1IsExitingEnemy) { obj2.x -= moveX * 2; obj2.y -= moveY * 2; } else if (obj2IsExitingEnemy) { obj1.x += moveX * 2; obj1.y += moveY * 2; } else { obj1.x += moveX; obj1.y += moveY; obj2.x -= moveX; obj2.y -= moveY; } if (obj1 === this.playerCar1 || obj1 === this.playerCar2) { if (typeof obj1.clampToScreen === 'function') obj1.clampToScreen(); } if (obj2 === this.playerCar1 || obj2 === this.playerCar2) { if (typeof obj2.clampToScreen === 'function') obj2.clampToScreen(); } if (obj1 instanceof OtherCar && !obj1.isExiting && typeof obj1.clampToScreen === 'function') { obj1.clampToScreen(); } if (obj2 instanceof OtherCar && !obj2.isExiting && typeof obj2.clampToScreen === 'function') { obj2.clampToScreen(); } } }
+        separateCars(obj1, obj2) { if (obj1 instanceof OtherCar && obj2 instanceof OtherCar && (obj1.isExiting || obj2.isExiting)) { return; } const rect1 = obj1.getRect(); const rect2 = obj2.getRect(); if (!rect1 || !rect2) return; const dx = (rect1.x + rect1.width / 2) - (rect2.x + rect2.width / 2); const dy = (rect1.y + rect1.height / 2) - (rect2.y + rect2.height / 2); const combinedHalfWidths = rect1.width / 2 + rect2.width / 2; const combinedHalfHeights = rect1.height / 2 + rect2.height / 2; if (Math.abs(dx) < combinedHalfWidths && Math.abs(dy) < combinedHalfHeights) { const overlapX = combinedHalfWidths - Math.abs(dx); const overlapY = combinedHalfHeights - Math.abs(dy); let moveX = 0, moveY = 0; if (overlapX < overlapY) { moveX = (overlapX / 2) * this.separationFactor * Math.sign(dx); if (Math.abs(dx) < 5) moveY = (Math.random() - 0.5) * 4; } else { moveY = (overlapY / 2) * this.separationFactor * Math.sign(dy); if (Math.abs(dy) < 5) moveX = (Math.random() - 0.5) * 4; } const obj1IsExitingEnemy = (obj1 instanceof OtherCar && obj1.isExiting); const obj2IsExitingEnemy = (obj2 instanceof OtherCar && obj2.isExiting); if (obj1IsExitingEnemy) { obj2.x -= moveX * 2; obj2.y -= moveY * 2; } else if (obj2IsExitingEnemy) { obj1.x += moveX * 2; obj1.y += moveY * 2; } else { obj1.x += moveX; obj1.y += moveY; obj2.x -= moveX; obj2.y -= moveY; } if (obj1 === this.playerCar1 || obj1 === this.playerCar2) { if (typeof obj1.clampToScreen === 'function') obj1.clampToScreen(); } if (obj2 === this.playerCar1 || obj2 === this.playerCar2) { if (typeof obj2.clampToScreen === 'function') obj2.clampToScreen(); } if (obj1 instanceof OtherCar && !obj1.isExiting && typeof obj1.clampToScreen === 'function') { obj1.clampToScreen(); } if (obj2 instanceof OtherCar && !obj2.isExiting && typeof obj2.clampToScreen === 'function') { obj2.clampToScreen(); } } }
         checkCollisions() { const now = performance.now(); this.otherCars.forEach(otherCar => { if (checkCollision(this.playerCar1.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer1 > this.collisionCooldown) { this.player1CollisionCount++; otherCar.lastCollisionTimePlayer1 = now; } this.separateCars(this.playerCar1, otherCar); } if (checkCollision(this.playerCar2.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer2 > this.collisionCooldown) { this.player2CollisionCount++; otherCar.lastCollisionTimePlayer2 = now; } this.separateCars(this.playerCar2, otherCar); } }); if (checkCollision(this.playerCar1.getRect(), this.playerCar2.getRect())) { this.separateCars(this.playerCar1, this.playerCar2); } for (let i = 0; i < this.otherCars.length; i++) { for (let j = i + 1; j < this.otherCars.length; j++) { const carI = this.otherCars[i]; const carJ = this.otherCars[j]; const dy = Math.abs((carI.y + carI.height / 2) - (carJ.y + carJ.height / 2)); if (dy < (carI.height + carJ.height)) { if (checkCollision(carI.getRect(), carJ.getRect())) { this.separateCars(carI, carJ); } } } } }
         checkBulletCollisions() { const bulletsToRemoveCar1 = new Set(); const bulletsToRemoveCar2 = new Set(); const carIndicesToRemove = new Set(); this.bulletsCar1.forEach((bullet, bulletIndex) => { bullet.update(); if (bullet.x > this.screenWidth) { bulletsToRemoveCar1.add(bulletIndex); } else { this.otherCars.forEach((car, carIndex) => { if (!carIndicesToRemove.has(carIndex) && !car.isExiting && checkCollision(bullet.getRect(), car.getRect())) { bulletsToRemoveCar1.add(bulletIndex); carIndicesToRemove.add(carIndex); this.carsRemovedByCar1++; return; } }); } }); this.bulletsCar2.forEach((bullet, bulletIndex) => { bullet.update(); if (bullet.x > this.screenWidth) { bulletsToRemoveCar2.add(bulletIndex); } else { this.otherCars.forEach((car, carIndex) => { if (!carIndicesToRemove.has(carIndex) && !car.isExiting && checkCollision(bullet.getRect(), car.getRect())) { bulletsToRemoveCar2.add(bulletIndex); carIndicesToRemove.add(carIndex); this.carsRemovedByCar2++; return; } }); } }); if (bulletsToRemoveCar1.size > 0) { this.bulletsCar1 = this.bulletsCar1.filter((_, index) => !bulletsToRemoveCar1.has(index)); } if (bulletsToRemoveCar2.size > 0) { this.bulletsCar2 = this.bulletsCar2.filter((_, index) => !bulletsToRemoveCar2.has(index)); } if (carIndicesToRemove.size > 0) { this.otherCars = this.otherCars.filter((_, index) => !carIndicesToRemove.has(index)); } }
         drawText(text, x, y, color = 'white', bgColor = 'rgba(0, 0, 0, 0.6)') { ctx.font = '20px Arial'; const textMetrics = ctx.measureText(text); const textWidth = textMetrics.width; const textHeight = parseInt(ctx.font, 10) * 1.2; ctx.fillStyle = bgColor; ctx.fillRect(x - 5, y - textHeight + 5, textWidth + 10, textHeight + 4); ctx.fillStyle = color; ctx.fillText(text, x, y); }
         draw() { ctx.fillStyle = '#3333AA'; ctx.fillRect(0, 0, this.screenWidth, this.screenHeight); this.roadMarkings.forEach(marking => marking.draw(ctx)); this.otherCars.forEach(car => car.draw(ctx)); this.playerCar1.draw(ctx); this.playerCar2.draw(ctx); this.bulletsCar1.forEach(bullet => bullet.draw(ctx)); this.bulletsCar2.forEach(bullet => bullet.draw(ctx)); const now = performance.now(); const timePlayedSeconds = Math.floor((now - this.startTime) / 1000); const hours = Math.floor(timePlayedSeconds / 3600); const minutes = Math.floor((timePlayedSeconds % 3600) / 60); const seconds = timePlayedSeconds % 60; this.updateFpsCounter(now); let yPos = 30; const lineH = 28; this.drawText(`Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, 10, yPos); yPos += lineH; this.drawText(`P1 Hits: ${this.carsRemovedByCar1}`, 10, yPos); yPos += lineH; this.drawText(`P2 Hits: ${this.carsRemovedByCar2}`, 10, yPos); yPos += lineH; this.drawText(`Cars Offscreen: ${this.carsOutOfScreen}`, 10, yPos); yPos += lineH; this.drawText(`Cars On Screen: ${this.otherCars.length} / ${MAX_CARS}`, 10, yPos); yPos += lineH; this.drawText(`P1 Collisions: ${this.player1CollisionCount}`, 10, yPos); yPos += lineH; this.drawText(`P2 Collisions: ${this.player2CollisionCount}`, 10, yPos); yPos += lineH; this.drawText(`FPS: ${this.fps.toFixed(1)}`, 10, yPos); yPos += lineH; this.drawText(`P1 Bullets: ${this.bulletsCar1.length}`, 10, yPos); yPos += lineH; this.drawText(`P2 Bullets: ${this.bulletsCar2.length}`, 10, yPos); yPos += lineH; }
         update() { this.handlePlayerInput(); this.moveOtherCars(); this.roadMarkings.forEach(m => m.moveLeft(this.otherCarSpeed * 1.2)); this.checkCollisions(); this.checkBulletCollisions(); this.loadNewCars(); }
-        gameLoop(timestamp) {
-            // Poll gamepad state every frame, even when paused.
+        gameLoop() {
             pollGamepads();
-
-            // If the game is paused, skip the update and draw loops.
-            if (isGamePaused) {
-                requestAnimationFrame(this.gameLoop.bind(this)); // Keep the loop alive
-                return;
+            if (!isGamePaused) {
+                this.update();
+                this.draw();
             }
-
-            this.update();
-            this.draw();
-            requestAnimationFrame(this.gameLoop.bind(this));
+            this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
         }
-        start() { console.log("Starting game loop..."); if (!this.playerCar1 || !this.playerCar2 || !this.enemyImagesData) { console.error("Cannot start game, assets missing."); alert("Error: Game assets not loaded."); return; } this.startTime = performance.now(); this.lastFpsUpdate = this.startTime; requestAnimationFrame(this.gameLoop.bind(this)); }
+        start() { console.log("Starting game loop..."); if (!this.playerCar1 || !this.playerCar2 || !this.enemyImagesData) { console.error("Cannot start game, assets missing."); alert("Error: Game assets not loaded."); return; } this.startTime = performance.now(); this.lastFpsUpdate = this.startTime; this.gameLoop(); }
     }
 
-    // --- Game Initialization and Start ---
-    console.log("DOM loaded. Starting image loading...");
-    const potentialImagePaths = []; for (let i = 1; i <= MAX_IMAGES_TO_CHECK; i++) { const filename = i.toString().padStart(FILENAME_PADDING, '0') + IMAGE_EXTENSION; potentialImagePaths.push(`${IMAGE_FOLDER}/${filename}`); } console.log(`Probing for up to ${MAX_IMAGES_TO_CHECK} images...`);
-    Promise.allSettled(potentialImagePaths.map(loadImage))
-        .then(results => { console.log("Image loading probe finished."); const successfullyLoaded = []; results.forEach((result, index) => { if (result.status === 'fulfilled') { successfullyLoaded.push({ path: potentialImagePaths[index], image: result.value }); } });
-            if (successfullyLoaded.length < 2) { console.error(`Error: Loaded only ${successfullyLoaded.length} images, need >= 2.`); alert(`Error: Loaded only ${successfullyLoaded.length} images from '${IMAGE_FOLDER}'. Need >= 2.`); return; } console.log(`Successfully loaded ${successfullyLoaded.length} images.`);
-            successfullyLoaded.forEach(item => { loadedImages[item.path] = item.image; }); let availableImagePaths = successfullyLoaded.map(item => item.path); shuffleArray(availableImagePaths); const player1Path = availableImagePaths.pop(); const player2Path = availableImagePaths.pop(); const enemyImagePaths = availableImagePaths; console.log(`P1 uses: ${player1Path}`); console.log(`P2 uses: ${player2Path}`); console.log(`${enemyImagePaths.length} images for enemies.`);
-            const player1Original = loadedImages[player1Path]; const player2Original = loadedImages[player2Path]; if (!player1Original || !player2Original) { throw new Error("Failed to get loaded player images."); } const player1TransformedData = createTransformedImage(player1Original, IMAGE_SCALE, PLAYER_CAR_ROTATION_DEGREES); const player2TransformedData = createTransformedImage(player2Original, IMAGE_SCALE, PLAYER_CAR_ROTATION_DEGREES);
-            const enemyTransformedData = enemyImagePaths.map(path => loadedImages[path]).filter(img => img && img.width > 0 && img.height > 0).map(img => createTransformedImage(img, IMAGE_SCALE, OTHER_CAR_ROTATION_DEGREES)).filter(data => data && data.canvas && data.width > 0);
-            if (!player1TransformedData || !player2TransformedData || !player1TransformedData.canvas || !player2TransformedData.canvas) { throw new Error("Failed to create transformed player images."); } if (enemyTransformedData.length === 0 && enemyImagePaths.length > 0) { console.warn("Some enemy images failed transformation."); } if (enemyTransformedData.length === 0 && successfullyLoaded.length >= 2) { console.warn("No valid enemy images available."); }
-            console.log("Creating Game instance..."); const game = new Game(SCREEN_WIDTH, SCREEN_HEIGHT, CAR_SPEED, OTHER_CAR_SPEED, player1TransformedData, player2TransformedData, enemyTransformedData); game.start();
-        })
-        .catch(error => { console.error("Error during game initialization:", error); alert(`Game setup error: ${error.message}.`); });
 
+    // --- Customization Menu Logic ---
+    function updateSlidersFromSettings(settings) {
+        separationSlider.value = settings.separationFactor;
+        separationValue.textContent = settings.separationFactor.toFixed(2);
+        playerSpeedSlider.value = settings.carSpeed;
+        playerSpeedValue.textContent = settings.carSpeed;
+        enemySpeedSlider.value = settings.otherCarSpeed;
+        enemySpeedValue.textContent = settings.otherCarSpeed.toFixed(1);
+        cooldownSlider.value = settings.collisionCooldown;
+        cooldownValue.textContent = settings.collisionCooldown;
+    }
+    
+    function setSlidersEnabled(enabled) {
+        [separationSlider, playerSpeedSlider, enemySpeedSlider, cooldownSlider].forEach(slider => slider.disabled = !enabled);
+    }
+
+    presetSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'original') {
+            currentPhysicsSettings = { ...originalPhysicsSettings };
+            updateSlidersFromSettings(currentPhysicsSettings);
+            setSlidersEnabled(false);
+        } else { // manual
+            setSlidersEnabled(true);
+            // ADDED: Set separation force to 2.0 when entering manual mode
+            const newSeparationForce = 2.0;
+            currentPhysicsSettings.separationFactor = newSeparationForce;
+            separationSlider.value = newSeparationForce;
+            separationValue.textContent = newSeparationForce.toFixed(2);
+            // END ADDED
+        }
+    });
+
+    separationSlider.addEventListener('input', e => { separationValue.textContent = parseFloat(e.target.value).toFixed(2); currentPhysicsSettings.separationFactor = parseFloat(e.target.value); });
+    playerSpeedSlider.addEventListener('input', e => { playerSpeedValue.textContent = e.target.value; currentPhysicsSettings.carSpeed = parseInt(e.target.value, 10); });
+    enemySpeedSlider.addEventListener('input', e => { enemySpeedValue.textContent = parseFloat(e.target.value).toFixed(1); currentPhysicsSettings.otherCarSpeed = parseFloat(e.target.value); });
+    cooldownSlider.addEventListener('input', e => { cooldownValue.textContent = e.target.value; currentPhysicsSettings.collisionCooldown = parseInt(e.target.value, 10); });
+
+    newGameButton.addEventListener('click', () => {
+        closeAllMenus();
+        startGame(currentPhysicsSettings);
+    });
+
+    // Initialize sliders
+    updateSlidersFromSettings(originalPhysicsSettings);
+    setSlidersEnabled(false); // Start in "Original" mode
+
+    // --- Game Initialization and Start ---
+    function startGame(settings) {
+        if (game && game.animationFrameId) {
+            cancelAnimationFrame(game.animationFrameId); // Stop previous game loop
+        }
+
+        const gameSettings = {
+            ...settings,
+            screenWidth: SCREEN_WIDTH,
+            screenHeight: SCREEN_HEIGHT,
+            player1ImgData: transformedAssetData.player1,
+            player2ImgData: transformedAssetData.player2,
+            enemyImagesData: transformedAssetData.enemies,
+        };
+        
+        game = new Game(gameSettings);
+        game.start();
+        console.log("New game started with settings:", settings);
+    }
+
+    if (isInitialLoad) {
+        console.log("DOM loaded. Starting image loading...");
+        const potentialImagePaths = []; for (let i = 1; i <= MAX_IMAGES_TO_CHECK; i++) { const filename = i.toString().padStart(FILENAME_PADDING, '0') + IMAGE_EXTENSION; potentialImagePaths.push(`${IMAGE_FOLDER}/${filename}`); } console.log(`Probing for up to ${MAX_IMAGES_TO_CHECK} images...`);
+        Promise.allSettled(potentialImagePaths.map(loadImage))
+            .then(results => { console.log("Image loading probe finished."); const successfullyLoaded = []; results.forEach((result, index) => { if (result.status === 'fulfilled') { successfullyLoaded.push({ path: potentialImagePaths[index], image: result.value }); } });
+                if (successfullyLoaded.length < 2) { console.error(`Error: Loaded only ${successfullyLoaded.length} images, need >= 2.`); alert(`Error: Loaded only ${successfullyLoaded.length} images from '${IMAGE_FOLDER}'. Need >= 2.`); return; } console.log(`Successfully loaded ${successfullyLoaded.length} images.`);
+                successfullyLoaded.forEach(item => { loadedImages[item.path] = item.image; }); let availableImagePaths = successfullyLoaded.map(item => item.path); shuffleArray(availableImagePaths); const player1Path = availableImagePaths.pop(); const player2Path = availableImagePaths.pop(); const enemyImagePaths = availableImagePaths; console.log(`P1 uses: ${player1Path}`); console.log(`P2 uses: ${player2Path}`); console.log(`${enemyImagePaths.length} images for enemies.`);
+                const player1Original = loadedImages[player1Path]; const player2Original = loadedImages[player2Path]; if (!player1Original || !player2Original) { throw new Error("Failed to get loaded player images."); } 
+                
+                // Store transformed data globally for reuse
+                transformedAssetData.player1 = createTransformedImage(player1Original, IMAGE_SCALE, PLAYER_CAR_ROTATION_DEGREES);
+                transformedAssetData.player2 = createTransformedImage(player2Original, IMAGE_SCALE, PLAYER_CAR_ROTATION_DEGREES);
+                transformedAssetData.enemies = enemyImagePaths.map(path => loadedImages[path]).filter(img => img && img.width > 0 && img.height > 0).map(img => createTransformedImage(img, IMAGE_SCALE, OTHER_CAR_ROTATION_DEGREES)).filter(data => data && data.canvas && data.width > 0);
+
+                if (!transformedAssetData.player1 || !transformedAssetData.player2 || !transformedAssetData.player1.canvas || !transformedAssetData.player2.canvas) { throw new Error("Failed to create transformed player images."); } 
+                if (transformedAssetData.enemies.length === 0 && enemyImagePaths.length > 0) { console.warn("Some enemy images failed transformation."); } 
+                if (transformedAssetData.enemies.length === 0 && successfullyLoaded.length >= 2) { console.warn("No valid enemy images available."); }
+                
+                console.log("Creating Game instance..."); 
+                startGame(originalPhysicsSettings);
+                isInitialLoad = false;
+            })
+            .catch(error => { console.error("Error during game initialization:", error); alert(`Game setup error: ${error.message}.`); });
+    }
 }); // End DOMContentLoaded listener

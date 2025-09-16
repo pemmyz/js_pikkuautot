@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF--8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pikkuautot (HTML5 Canvas)</title>
     <link rel="stylesheet" href="style.css">
@@ -11,13 +11,16 @@
         <!-- This header is an overlay on top of the canvas -->
         <div id="gameHeader">
             <h1>Pikkuautot</h1>
-            <button id="helpButton">Help (H)</button>
+            <div id="headerButtons">
+                <button id="customizeButton">Customize (C)</button>
+                <button id="helpButton">Help (H)</button>
+            </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
 
         <!-- The help menu is also an overlay -->
-        <div id="helpMenu" class="hidden">
+        <div id="helpMenu" class="menu-overlay hidden">
             <h2>Controls</h2>
             <p><b>P1:</b> Arrows (Move), Space (Shoot)</p>
             <p><b>P2:</b> WASD (Move), F (Shoot)</p>
@@ -25,6 +28,44 @@
             <p><b>Gamepad:</b> Press any face button (A,B,X,Y) to assign. D-Pad (Move), Any Face Button (Shoot).</p>
             <p class="close-help">(Press H or click button to close)</p>
         </div>
+
+        <!-- The customize menu overlay -->
+        <div id="customizeMenu" class="menu-overlay hidden">
+            <h2>Customize Physics</h2>
+            <div class="setting-row">
+                <label for="presetSelect">Preset:</label>
+                <select id="presetSelect">
+                    <option value="original">Original</option>
+                    <option value="manual">Manual</option>
+                </select>
+            </div>
+            <div id="slidersContainer">
+                <div class="slider-container">
+                    <label for="separationSlider">Separation Force:</label>
+                    <input type="range" id="separationSlider" min="0.1" max="2.0" step="0.05">
+                    <span class="slider-value" id="separationValue">0.6</span>
+                </div>
+                 <div class="slider-container">
+                    <label for="playerSpeedSlider">Player Speed:</label>
+                    <input type="range" id="playerSpeedSlider" min="5" max="30" step="1">
+                    <span class="slider-value" id="playerSpeedValue">15</span>
+                </div>
+                 <div class="slider-container">
+                    <label for="enemySpeedSlider">Enemy Speed:</label>
+                    <input type="range" id="enemySpeedSlider" min="1" max="10" step="0.5">
+                    <span class="slider-value" id="enemySpeedValue">3</span>
+                </div>
+                 <div class="slider-container">
+                    <label for="cooldownSlider">Collision Cooldown (ms):</label>
+                    <input type="range" id="cooldownSlider" min="50" max="500" step="10">
+                    <span class="slider-value" id="cooldownValue">150</span>
+                </div>
+            </div>
+            <hr>
+            <button id="newGameButton">Start New Game</button>
+            <p class="close-customize">(Press C or click button to close)</p>
+        </div>
+
     </div>
 
     <!-- Important: defer ensures script runs after HTML is parsed -->
