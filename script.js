@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Constants ---
     const SCREEN_WIDTH = 1920;
-    const SCREEN_HEIGHT = 1010;
+    const SCREEN_HEIGHT = 1080;
     const CAR_SPEED = 15;          // Player car speed
     const OTHER_CAR_SPEED = 3;     // Enemy car speed
     const MAX_CARS = 60;           // Target maximum number of enemy cars on screen
