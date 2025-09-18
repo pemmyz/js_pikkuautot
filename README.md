@@ -18,7 +18,7 @@ A chaotic two-player top-down driving game built using **JavaScript** and **HTML
 
 ## 🎮 Features
 
-- Two-player local multiplayer using keyboard
+- Two-player local multiplayer using keyboard/gamepads
 - Bullets with separate counters and hit detection
 - Randomly spawning enemy cars with sprite rotation
 - Collision handling with car un-stuck logic
@@ -26,7 +26,7 @@ A chaotic two-player top-down driving game built using **JavaScript** and **HTML
 - Real-time stats: time played, FPS, kills, dodges, and more
 - Optimized HTML5 Canvas rendering loop
 - Auto-loads car sprites from the `auto/` folder
-
+- Added Customize menu to change physics
 ---
 
 ## 🕹 Controls
