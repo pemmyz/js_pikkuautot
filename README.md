@@ -31,17 +31,39 @@ A chaotic two-player top-down driving game built using **JavaScript** and **HTML
 
 ## 🕹 Controls
 
-### Player 1
+### Player 1 — Keyboard
 - `Arrow Keys`: Move  
 - `Space`: Shoot  
 - `R`: Reset position
 
-### Player 2
+### Player 1 — Gamepad
+- **D-Pad**: Move  
+- **Any face button (A/B/X/Y)**: Shoot *(autofire while held)*  
+- **Assign**: Press any face button on an unassigned gamepad to claim **P1**
+
+---
+
+### Player 2 — Keyboard
 - `W`, `A`, `S`, `D`: Move  
 - `F`: Shoot
 
+### Player 2 — Gamepad
+- **D-Pad**: Move  
+- **Any face button (A/B/X/Y)**: Shoot *(autofire while held)*  
+- **Assign**: After P1 is assigned, press a face button on another gamepad to claim **P2**
+
+---
+
 ### Common
-- `Esc`: Quit or pause game
+- `Esc`: Pause / Quit  
+- `H`: Toggle Help menu  
+- `C`: Toggle Customize menu  
+
+> ℹ️ **Notes**
+> - Gamepads are assigned on the first face-button press: first pad becomes **P1**, second becomes **P2**.  
+> - If a gamepad disconnects, its slot frees up.  
+> - When the game is paused, inputs are ignored and pressed keys are cleared to prevent “stuck” movement.
+
 
 ---
 
