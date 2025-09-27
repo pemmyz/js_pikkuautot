@@ -164,3 +164,26 @@ canvas {
     max-height: 100vh; /* Allow canvas to fill the container */
     display: block;
 }
+
+/* Added styles for the about info in the help menu */
+.about-info {
+    text-align: center;
+    font-size: 0.9em;
+    color: #bbb;
+    margin-top: 15px;
+    line-height: 1.5;
+}
+
+.about-info p {
+    margin: 5px 0;
+}
+
+.about-info a {
+    color: #aed6f1;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.about-info a:hover {
+    text-decoration: underline;
+}
