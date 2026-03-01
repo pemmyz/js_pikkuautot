@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const seconds = timePlayedSeconds % 60; 
             this.updateFpsCounter(now); 
             
-            // INCREASED Y POS to 70 to make room for fullscreen button
+            // Y POS set to 70 to make room for fullscreen button
             let yPos = 70; 
             const lineH = 28; 
             
@@ -523,7 +523,11 @@ document.addEventListener('DOMContentLoaded', () => {
         addControlListener('mobile-right', 'arrowright');
         addControlListener('mobile-up', 'arrowup');
         addControlListener('mobile-down', 'arrowdown');
+        
+        // Primary Fire (Right Side)
         addControlListener('mobile-shoot', ' ');
+        // Secondary Fire (Left Side)
+        addControlListener('mobile-shoot-left', ' ');
     }
 
     // Initialize Scaling & Mobile Controls

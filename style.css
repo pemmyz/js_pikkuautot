@@ -211,6 +211,19 @@ body.mobile-mode #mobile-controls {
 }
 
 /* Control Panel Layouts */
+
+/* Left Side: Up, Down, Fire (Using Grid for perfect spacing) */
+#mobile-left-panel {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    gap: 15px; /* Ensures exact same distance vertically and horizontally */
+    align-items: center; /* Centers the fire button vertically between rows */
+    margin-left: 30px;
+    margin-bottom: 20px;
+}
+
+/* Right Side: Flex column layout for Top/Bottom arrangement */
 .control-panel {
     display: flex;
     flex-direction: column;
@@ -219,15 +232,11 @@ body.mobile-mode #mobile-controls {
     margin-bottom: 20px;
 }
 
-#mobile-left-panel {
-    margin-left: 30px;
-}
-
 #mobile-right-panel {
     margin-right: 30px;
 }
 
-/* Specific Row Spacing */
+/* Specific Row Spacing for Right Side */
 .action-row {
     display: flex;
     justify-content: center;
