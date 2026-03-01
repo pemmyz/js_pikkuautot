@@ -24,6 +24,30 @@
 
         <canvas id="gameCanvas"></canvas>
 
+        <!-- Touch Controls Overlay (Moved INSIDE gameContainer to scale perfectly) -->
+        <div id="mobile-controls">
+            
+            <!-- LEFT SIDE: Up, Down, and Secondary Fire -->
+            <div id="mobile-left-panel">
+                <button id="mobile-up" class="mobile-control-btn" style="grid-column: 1; grid-row: 1;">▲</button>
+                <button id="mobile-down" class="mobile-control-btn" style="grid-column: 1; grid-row: 2;">▼</button>
+                <!-- Secondary Fire Button spanning both rows to perfectly center it -->
+                <button id="mobile-shoot-left" class="mobile-control-btn" style="grid-column: 2; grid-row: 1 / span 2;">🔥</button>
+            </div>
+            
+            <!-- RIGHT SIDE: Fire (Top) and Left/Right (Bottom) -->
+            <div id="mobile-right-panel" class="control-panel">
+                <div class="action-row">
+                    <button id="mobile-shoot" class="mobile-control-btn">🔥</button>
+                </div>
+                <div class="dpad-row">
+                    <button id="mobile-left" class="mobile-control-btn">◀</button>
+                    <button id="mobile-right" class="mobile-control-btn">▶</button>
+                </div>
+            </div>
+
+        </div>
+
         <!-- The help menu is also an overlay -->
         <div id="helpMenu" class="menu-overlay hidden">
             <h2>Controls</h2>
@@ -38,7 +62,6 @@
             </div>
             <p class="close-help">(Press H or click button to close)</p>
         </div>
-
 
         <!-- The customize menu overlay -->
         <div id="customizeMenu" class="menu-overlay hidden">
@@ -75,30 +98,6 @@
             <hr>
             <button id="newGameButton">Start New Game</button>
             <p class="close-customize">(Press C or click button to close)</p>
-        </div>
-
-    </div>
-
-    <!-- Touch Controls Overlay (Only appears in Fullscreen / Mobile Mode) -->
-    <div id="mobile-controls">
-        
-        <!-- LEFT SIDE: Up, Down, and Secondary Fire -->
-        <div id="mobile-left-panel">
-            <button id="mobile-up" class="mobile-control-btn" style="grid-column: 1; grid-row: 1;">▲</button>
-            <button id="mobile-down" class="mobile-control-btn" style="grid-column: 1; grid-row: 2;">▼</button>
-            <!-- Secondary Fire Button spanning both rows to perfectly center it -->
-            <button id="mobile-shoot-left" class="mobile-control-btn" style="grid-column: 2; grid-row: 1 / span 2;">🔥</button>
-        </div>
-        
-        <!-- RIGHT SIDE: Fire (Top) and Left/Right (Bottom) -->
-        <div id="mobile-right-panel" class="control-panel">
-            <div class="action-row">
-                <button id="mobile-shoot" class="mobile-control-btn">🔥</button>
-            </div>
-            <div class="dpad-row">
-                <button id="mobile-left" class="mobile-control-btn">◀</button>
-                <button id="mobile-right" class="mobile-control-btn">▶</button>
-            </div>
         </div>
 
     </div>

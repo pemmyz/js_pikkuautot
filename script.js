@@ -264,6 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.lastOtherCarLoadTime = 0; this.otherCarLoadInterval = 200;
             this.roadMarkings = []; this.setupRoadMarkings();
             this.animationFrameId = null; // To hold the requestAnimationFrame ID
+            
+            // FPS Target (60 FPS) to prevent mobile high refresh rate speedup
+            this.fpsInterval = 1000 / 60;
+            this.lastFrameTime = performance.now();
         }
         setupRoadMarkings() { const numLanes = 5; const laneHeight = this.screenHeight / numLanes; const markingSpacing = 250; const markingsPerScreenRoughly = Math.ceil(this.screenWidth / markingSpacing) + 4; for (let i = 0; i < numLanes; i++) { const laneY = (i * laneHeight) + (laneHeight / 2) - 5; for (let j = 0; j < markingsPerScreenRoughly; j++) { const initialX = (j * markingSpacing) - (markingSpacing * 2); this.roadMarkings.push(new RoadMarking(initialX, laneY, this.screenWidth)); } } }
         updateFpsCounter(now) { this.frameCount++; const elapsed = now - this.lastFpsUpdate; if (elapsed >= 1000) { this.fps = (this.frameCount * 1000) / elapsed; this.frameCount = 0; this.lastFpsUpdate = now; } }
@@ -327,8 +331,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const seconds = timePlayedSeconds % 60; 
             this.updateFpsCounter(now); 
             
-            // Y POS set to 70 to make room for fullscreen button
-            let yPos = 70; 
+            // Y POS set to 120 to make room for larger fullscreen button
+            let yPos = 120; 
             const lineH = 28; 
             
             this.drawText(`Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, 10, yPos); yPos += lineH; 
@@ -343,15 +347,38 @@ document.addEventListener('DOMContentLoaded', () => {
             this.drawText(`P2 Bullets: ${this.bulletsCar2.length}`, 10, yPos); yPos += lineH; 
         }
         update() { this.handlePlayerInput(); this.moveOtherCars(); this.roadMarkings.forEach(m => m.moveLeft(this.otherCarSpeed * 1.2)); this.checkCollisions(); this.checkBulletCollisions(); this.loadNewCars(); }
-        gameLoop() {
+        
+        // Capped at 60 FPS using timestamp diff
+        gameLoop(timestamp) {
+            if (!timestamp) timestamp = performance.now();
+            
             pollGamepads();
+            
             if (!isGamePaused) {
-                this.update();
-                this.draw();
+                const elapsed = timestamp - this.lastFrameTime;
+                
+                // Only process the frame if enough time has passed (16.66ms for 60fps)
+                if (elapsed >= this.fpsInterval) {
+                    // Update lastFrameTime, adjusting for any slight overflow to maintain perfectly even pace
+                    this.lastFrameTime = timestamp - (elapsed % this.fpsInterval);
+                    
+                    this.update();
+                    this.draw();
+                }
             }
             this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this));
         }
-        start() { console.log("Starting game loop..."); if (!this.playerCar1 || !this.playerCar2 || !this.enemyImagesData) { console.error("Cannot start game, assets missing."); alert("Error: Game assets not loaded."); return; } this.startTime = performance.now(); this.lastFpsUpdate = this.startTime; this.gameLoop(); }
+        
+        start() { 
+            console.log("Starting game loop..."); 
+            if (!this.playerCar1 || !this.playerCar2 || !this.enemyImagesData) { 
+                console.error("Cannot start game, assets missing."); alert("Error: Game assets not loaded."); return; 
+            } 
+            this.startTime = performance.now(); 
+            this.lastFpsUpdate = this.startTime; 
+            this.lastFrameTime = performance.now();
+            this.animationFrameId = requestAnimationFrame(this.gameLoop.bind(this)); 
+        }
     }
 
 
@@ -378,12 +405,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setSlidersEnabled(false);
         } else { // manual
             setSlidersEnabled(true);
-            // ADDED: Set separation force to 2.0 when entering manual mode
             const newSeparationForce = 2.0;
             currentPhysicsSettings.separationFactor = newSeparationForce;
             separationSlider.value = newSeparationForce;
             separationValue.textContent = newSeparationForce.toFixed(2);
-            // END ADDED
         }
     });
 
