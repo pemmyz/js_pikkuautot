@@ -8,98 +8,100 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    
+    <!-- Game Canvas Container (This is what gets scaled by JS) -->
     <div id="gameContainer">
-        
-        <!-- Mobile/Fullscreen Button moved to Top Left -->
-        <button id="mobile-btn">📱 Fullscreen</button>
-
-        <!-- This header is an overlay on top of the canvas -->
-        <div id="gameHeader">
-            <h1>Pikkuautot</h1>
-            <div id="headerButtons">
-                <button id="customizeButton">Customize (C)</button>
-                <button id="helpButton">Help (H)</button>
-            </div>
-        </div>
-
         <canvas id="gameCanvas"></canvas>
+    </div>
 
-        <!-- Touch Controls Overlay (Moved INSIDE gameContainer to scale perfectly) -->
-        <div id="mobile-controls">
-            
-            <!-- LEFT SIDE: Up, Down, and Secondary Fire -->
-            <div id="mobile-left-panel">
-                <button id="mobile-up" class="mobile-control-btn" style="grid-column: 1; grid-row: 1;">▲</button>
-                <button id="mobile-down" class="mobile-control-btn" style="grid-column: 1; grid-row: 2;">▼</button>
-                <!-- Secondary Fire Button spanning both rows to perfectly center it -->
-                <button id="mobile-shoot-left" class="mobile-control-btn" style="grid-column: 2; grid-row: 1 / span 2;">🔥</button>
-            </div>
-            
-            <!-- RIGHT SIDE: Fire (Top) and Left/Right (Bottom) -->
-            <div id="mobile-right-panel" class="control-panel">
-                <div class="action-row">
-                    <button id="mobile-shoot" class="mobile-control-btn">🔥</button>
-                </div>
-                <div class="dpad-row">
-                    <button id="mobile-left" class="mobile-control-btn">◀</button>
-                    <button id="mobile-right" class="mobile-control-btn">▶</button>
-                </div>
-            </div>
+    <!-- UI Overlay Elements (Moved outside so they don't stretch/shrink with the canvas) -->
+    
+    <!-- Mobile/Fullscreen Button -->
+    <button id="mobile-btn">📱 Fullscreen</button>
 
+    <!-- Header Overlay -->
+    <div id="gameHeader">
+        <h1>Pikkuautot</h1>
+        <div id="headerButtons">
+            <button id="customizeButton">Customize (C)</button>
+            <button id="helpButton">Help (H)</button>
+        </div>
+    </div>
+
+    <!-- Touch Controls Overlay -->
+    <div id="mobile-controls">
+        
+        <!-- LEFT SIDE: Up, Down, and Secondary Fire -->
+        <div id="mobile-left-panel">
+            <button id="mobile-up" class="mobile-control-btn" style="grid-column: 1; grid-row: 1;">▲</button>
+            <button id="mobile-down" class="mobile-control-btn" style="grid-column: 1; grid-row: 2;">▼</button>
+            <!-- Secondary Fire Button spanning both rows to perfectly center it -->
+            <button id="mobile-shoot-left" class="mobile-control-btn" style="grid-column: 2; grid-row: 1 / span 2;">🔥</button>
+        </div>
+        
+        <!-- RIGHT SIDE: Fire (Top) and Left/Right (Bottom) -->
+        <div id="mobile-right-panel" class="control-panel">
+            <div class="action-row">
+                <button id="mobile-shoot" class="mobile-control-btn">🔥</button>
+            </div>
+            <div class="dpad-row">
+                <button id="mobile-left" class="mobile-control-btn">◀</button>
+                <button id="mobile-right" class="mobile-control-btn">▶</button>
+            </div>
         </div>
 
-        <!-- The help menu is also an overlay -->
-        <div id="helpMenu" class="menu-overlay hidden">
-            <h2>Controls</h2>
-            <p><b>P1:</b> Arrows (Move), Space (Shoot)</p>
-            <p><b>P2:</b> WASD (Move), F (Shoot)</p>
-            <hr>
-            <p><b>Gamepad:</b> Press any face button (A,B,X,Y) to assign. D-Pad (Move), Any Face Button (Shoot).</p>
-            <hr>
-            <div class="about-info">
-                <p>A chaotic 2-player game by pemmyz.</p>
-                <p>Link to repo: <a href="https://github.com/pemmyz/js_pikkuautot" target="_blank" rel="noopener noreferrer">github.com/pemmyz/js_pikkuautot</a></p>
-            </div>
-            <p class="close-help">(Press H or click button to close)</p>
-        </div>
+    </div>
 
-        <!-- The customize menu overlay -->
-        <div id="customizeMenu" class="menu-overlay hidden">
-            <h2>Customize Physics</h2>
-            <div class="setting-row">
-                <label for="presetSelect">Preset:</label>
-                <select id="presetSelect">
-                    <option value="original">Original</option>
-                    <option value="manual">Manual</option>
-                </select>
-            </div>
-            <div id="slidersContainer">
-                <div class="slider-container">
-                    <label for="separationSlider">Separation Force:</label>
-                    <input type="range" id="separationSlider" min="0.1" max="2.0" step="0.05">
-                    <span class="slider-value" id="separationValue">0.6</span>
-                </div>
-                 <div class="slider-container">
-                    <label for="playerSpeedSlider">Player Speed:</label>
-                    <input type="range" id="playerSpeedSlider" min="5" max="30" step="1">
-                    <span class="slider-value" id="playerSpeedValue">15</span>
-                </div>
-                 <div class="slider-container">
-                    <label for="enemySpeedSlider">Enemy Speed:</label>
-                    <input type="range" id="enemySpeedSlider" min="1" max="10" step="0.5">
-                    <span class="slider-value" id="enemySpeedValue">3</span>
-                </div>
-                 <div class="slider-container">
-                    <label for="cooldownSlider">Collision Cooldown (ms):</label>
-                    <input type="range" id="cooldownSlider" min="50" max="500" step="10">
-                    <span class="slider-value" id="cooldownValue">150</span>
-                </div>
-            </div>
-            <hr>
-            <button id="newGameButton">Start New Game</button>
-            <p class="close-customize">(Press C or click button to close)</p>
+    <!-- Help Menu Overlay -->
+    <div id="helpMenu" class="menu-overlay hidden">
+        <h2>Controls</h2>
+        <p><b>P1:</b> Arrows (Move), Space (Shoot)</p>
+        <p><b>P2:</b> WASD (Move), F (Shoot)</p>
+        <hr>
+        <p><b>Gamepad:</b> Press any face button (A,B,X,Y) to assign. D-Pad (Move), Any Face Button (Shoot).</p>
+        <hr>
+        <div class="about-info">
+            <p>A chaotic 2-player game by pemmyz.</p>
+            <p>Link to repo: <a href="https://github.com/pemmyz/js_pikkuautot" target="_blank" rel="noopener noreferrer">github.com/pemmyz/js_pikkuautot</a></p>
         </div>
+        <p class="close-help">(Press H or click button to close)</p>
+    </div>
 
+    <!-- Customize Menu Overlay -->
+    <div id="customizeMenu" class="menu-overlay hidden">
+        <h2>Customize Physics</h2>
+        <div class="setting-row">
+            <label for="presetSelect">Preset:</label>
+            <select id="presetSelect">
+                <option value="original">Original</option>
+                <option value="manual">Manual</option>
+            </select>
+        </div>
+        <div id="slidersContainer">
+            <div class="slider-container">
+                <label for="separationSlider">Separation Force:</label>
+                <input type="range" id="separationSlider" min="0.1" max="2.0" step="0.05">
+                <span class="slider-value" id="separationValue">0.6</span>
+            </div>
+             <div class="slider-container">
+                <label for="playerSpeedSlider">Player Speed:</label>
+                <input type="range" id="playerSpeedSlider" min="5" max="30" step="1">
+                <span class="slider-value" id="playerSpeedValue">15</span>
+            </div>
+             <div class="slider-container">
+                <label for="enemySpeedSlider">Enemy Speed:</label>
+                <input type="range" id="enemySpeedSlider" min="1" max="10" step="0.5">
+                <span class="slider-value" id="enemySpeedValue">3</span>
+            </div>
+             <div class="slider-container">
+                <label for="cooldownSlider">Collision Cooldown (ms):</label>
+                <input type="range" id="cooldownSlider" min="50" max="500" step="10">
+                <span class="slider-value" id="cooldownValue">150</span>
+            </div>
+        </div>
+        <hr>
+        <button id="newGameButton">Start New Game</button>
+        <p class="close-customize">(Press C or click button to close)</p>
     </div>
 
     <!-- Important: defer ensures script runs after HTML is parsed -->

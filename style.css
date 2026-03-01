@@ -31,8 +31,18 @@ body.mobile-mode {
     transform-origin: center center;
 }
 
+canvas {
+    border: 1px solid black;
+    background-color: #0000ff;
+    display: block;
+    width: 1920px;
+    height: 1080px;
+}
+
+/* --- UI OVERLAYS (Fixed to Screen) --- */
+
 #gameHeader {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -81,22 +91,20 @@ h1 {
     color: #fff;
 }
 
-/* Specific position for Fullscreen button (Made 2x Larger) */
+/* Specific position for Fullscreen button */
 #mobile-btn {
-    position: absolute;
+    position: fixed;
     top: 15px;
     left: 15px;
     z-index: 20;
-    padding: 16px 32px; /* 2x original padding */
-    font-size: 2em;     /* 2x original font-size */
-    border-width: 2px;
+    border-width: 1px;
 }
 
 /* Hide the toggle button when in mobile mode */
 body.mobile-mode #mobile-btn { display: none; }
 
 .menu-overlay {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -107,7 +115,7 @@ body.mobile-mode #mobile-btn { display: none; }
     color: #eee;
     text-align: left;
     z-index: 200;
-    min-width: 350px;
+    min-width: min(350px, 90vw);
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     line-height: 1.8;
 }
@@ -134,7 +142,7 @@ body.mobile-mode #mobile-btn { display: none; }
     text-align: center;
 }
 
-#customizeMenu { min-width: 450px; }
+#customizeMenu { min-width: min(450px, 90vw); }
 
 .setting-row, .slider-container {
     display: flex;
@@ -157,14 +165,6 @@ body.mobile-mode #mobile-btn { display: none; }
 
 .hidden { display: none; }
 
-canvas {
-    border: 1px solid black;
-    background-color: #0000ff;
-    display: block;
-    width: 1920px;
-    height: 1080px;
-}
-
 .about-info {
     text-align: center; font-size: 0.9em; color: #bbb;
     margin-top: 15px; line-height: 1.5;
@@ -179,15 +179,15 @@ canvas {
 /* ======================================= */
 
 #mobile-controls {
-    /* Absolute to 1920x1080 gameContainer ensuring exact scale matching across devices */
-    position: absolute; 
-    top: 0; left: 0; width: 100%; height: 100%;
+    /* Fixed to screen, independent of game scaling */
+    position: fixed; 
+    top: 0; left: 0; width: 100vw; height: 100vh;
     pointer-events: none; /* Let touches fall through to game unless on a button */
     z-index: 3000;
     display: none;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 60px; /* Scaled size for 1080p base height */
+    padding: 30px 40px; /* Consistent physical padding from edges */
     box-sizing: border-box;
 }
 
@@ -197,13 +197,13 @@ body.mobile-mode #mobile-controls {
 
 .mobile-control-btn {
     pointer-events: auto; /* Re-enable clicks for buttons */
-    /* Resized larger to properly fit the 1920x1080 scaled container */
-    width: 160px; height: 160px; 
+    /* Fixed physical sizes so they are comfortable on both mobile and desktop */
+    width: 80px; height: 80px; 
     background: rgba(255,255,255,0.15);
-    border: 5px solid rgba(255,255,255,0.4);
+    border: 3px solid rgba(255,255,255,0.4);
     border-radius: 50%;
     color: white;
-    font-size: 60px;
+    font-size: 30px;
     display: flex; justify-content: center; align-items: center;
     user-select: none;
     backdrop-filter: blur(4px);
@@ -215,17 +215,15 @@ body.mobile-mode #mobile-controls {
     transform: scale(0.95);
 }
 
-/* Control Panel Layouts for Scaled Container */
+/* Control Panel Layouts */
 
 /* Left Side: Up, Down, Fire (Using Grid for perfect spacing) */
 #mobile-left-panel {
     display: grid;
     grid-template-columns: auto auto;
     grid-template-rows: auto auto;
-    gap: 30px; /* Ensures exact same distance vertically and horizontally */
+    gap: 15px; /* Sensible spacing */
     align-items: center; /* Centers the fire button vertically between rows */
-    margin-left: 50px;
-    margin-bottom: 50px;
 }
 
 /* Right Side: Flex column layout for Top/Bottom arrangement */
@@ -233,22 +231,16 @@ body.mobile-mode #mobile-controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px; /* Spacing between top and bottom rows */
-    margin-bottom: 50px;
-}
-
-#mobile-right-panel {
-    margin-right: 50px;
+    gap: 15px; /* Spacing between top and bottom rows */
 }
 
 /* Specific Row Spacing for Right Side */
 .action-row {
     display: flex;
     justify-content: center;
-    margin-bottom: 10px;
 }
 
 .dpad-row {
     display: flex;
-    gap: 40px; /* Spacing between Left and Right buttons */
+    gap: 20px; /* Spacing between Left and Right buttons */
 }
