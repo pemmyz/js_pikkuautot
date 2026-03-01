@@ -311,7 +311,37 @@ document.addEventListener('DOMContentLoaded', () => {
         checkCollisions() { const now = performance.now(); this.otherCars.forEach(otherCar => { if (checkCollision(this.playerCar1.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer1 > this.collisionCooldown) { this.player1CollisionCount++; otherCar.lastCollisionTimePlayer1 = now; } this.separateCars(this.playerCar1, otherCar); } if (checkCollision(this.playerCar2.getRect(), otherCar.getRect())) { if (now - otherCar.lastCollisionTimePlayer2 > this.collisionCooldown) { this.player2CollisionCount++; otherCar.lastCollisionTimePlayer2 = now; } this.separateCars(this.playerCar2, otherCar); } }); if (checkCollision(this.playerCar1.getRect(), this.playerCar2.getRect())) { this.separateCars(this.playerCar1, this.playerCar2); } for (let i = 0; i < this.otherCars.length; i++) { for (let j = i + 1; j < this.otherCars.length; j++) { const carI = this.otherCars[i]; const carJ = this.otherCars[j]; const dy = Math.abs((carI.y + carI.height / 2) - (carJ.y + carJ.height / 2)); if (dy < (carI.height + carJ.height)) { if (checkCollision(carI.getRect(), carJ.getRect())) { this.separateCars(carI, carJ); } } } } }
         checkBulletCollisions() { const bulletsToRemoveCar1 = new Set(); const bulletsToRemoveCar2 = new Set(); const carIndicesToRemove = new Set(); this.bulletsCar1.forEach((bullet, bulletIndex) => { bullet.update(); if (bullet.x > this.screenWidth) { bulletsToRemoveCar1.add(bulletIndex); } else { this.otherCars.forEach((car, carIndex) => { if (!carIndicesToRemove.has(carIndex) && !car.isExiting && checkCollision(bullet.getRect(), car.getRect())) { bulletsToRemoveCar1.add(bulletIndex); carIndicesToRemove.add(carIndex); this.carsRemovedByCar1++; return; } }); } }); this.bulletsCar2.forEach((bullet, bulletIndex) => { bullet.update(); if (bullet.x > this.screenWidth) { bulletsToRemoveCar2.add(bulletIndex); } else { this.otherCars.forEach((car, carIndex) => { if (!carIndicesToRemove.has(carIndex) && !car.isExiting && checkCollision(bullet.getRect(), car.getRect())) { bulletsToRemoveCar2.add(bulletIndex); carIndicesToRemove.add(carIndex); this.carsRemovedByCar2++; return; } }); } }); if (bulletsToRemoveCar1.size > 0) { this.bulletsCar1 = this.bulletsCar1.filter((_, index) => !bulletsToRemoveCar1.has(index)); } if (bulletsToRemoveCar2.size > 0) { this.bulletsCar2 = this.bulletsCar2.filter((_, index) => !bulletsToRemoveCar2.has(index)); } if (carIndicesToRemove.size > 0) { this.otherCars = this.otherCars.filter((_, index) => !carIndicesToRemove.has(index)); } }
         drawText(text, x, y, color = 'white', bgColor = 'rgba(0, 0, 0, 0.6)') { ctx.font = '20px Arial'; const textMetrics = ctx.measureText(text); const textWidth = textMetrics.width; const textHeight = parseInt(ctx.font, 10) * 1.2; ctx.fillStyle = bgColor; ctx.fillRect(x - 5, y - textHeight + 5, textWidth + 10, textHeight + 4); ctx.fillStyle = color; ctx.fillText(text, x, y); }
-        draw() { ctx.fillStyle = '#3333AA'; ctx.fillRect(0, 0, this.screenWidth, this.screenHeight); this.roadMarkings.forEach(marking => marking.draw(ctx)); this.otherCars.forEach(car => car.draw(ctx)); this.playerCar1.draw(ctx); this.playerCar2.draw(ctx); this.bulletsCar1.forEach(bullet => bullet.draw(ctx)); this.bulletsCar2.forEach(bullet => bullet.draw(ctx)); const now = performance.now(); const timePlayedSeconds = Math.floor((now - this.startTime) / 1000); const hours = Math.floor(timePlayedSeconds / 3600); const minutes = Math.floor((timePlayedSeconds % 3600) / 60); const seconds = timePlayedSeconds % 60; this.updateFpsCounter(now); let yPos = 30; const lineH = 28; this.drawText(`Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, 10, yPos); yPos += lineH; this.drawText(`P1 Hits: ${this.carsRemovedByCar1}`, 10, yPos); yPos += lineH; this.drawText(`P2 Hits: ${this.carsRemovedByCar2}`, 10, yPos); yPos += lineH; this.drawText(`Cars Offscreen: ${this.carsOutOfScreen}`, 10, yPos); yPos += lineH; this.drawText(`Cars On Screen: ${this.otherCars.length} / ${MAX_CARS}`, 10, yPos); yPos += lineH; this.drawText(`P1 Collisions: ${this.player1CollisionCount}`, 10, yPos); yPos += lineH; this.drawText(`P2 Collisions: ${this.player2CollisionCount}`, 10, yPos); yPos += lineH; this.drawText(`FPS: ${this.fps.toFixed(1)}`, 10, yPos); yPos += lineH; this.drawText(`P1 Bullets: ${this.bulletsCar1.length}`, 10, yPos); yPos += lineH; this.drawText(`P2 Bullets: ${this.bulletsCar2.length}`, 10, yPos); yPos += lineH; }
+        draw() { 
+            ctx.fillStyle = '#3333AA'; 
+            ctx.fillRect(0, 0, this.screenWidth, this.screenHeight); 
+            this.roadMarkings.forEach(marking => marking.draw(ctx)); 
+            this.otherCars.forEach(car => car.draw(ctx)); 
+            this.playerCar1.draw(ctx); 
+            this.playerCar2.draw(ctx); 
+            this.bulletsCar1.forEach(bullet => bullet.draw(ctx)); 
+            this.bulletsCar2.forEach(bullet => bullet.draw(ctx)); 
+            const now = performance.now(); 
+            const timePlayedSeconds = Math.floor((now - this.startTime) / 1000); 
+            const hours = Math.floor(timePlayedSeconds / 3600); 
+            const minutes = Math.floor((timePlayedSeconds % 3600) / 60); 
+            const seconds = timePlayedSeconds % 60; 
+            this.updateFpsCounter(now); 
+            
+            // INCREASED Y POS to 70 to make room for fullscreen button
+            let yPos = 70; 
+            const lineH = 28; 
+            
+            this.drawText(`Time: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, 10, yPos); yPos += lineH; 
+            this.drawText(`P1 Hits: ${this.carsRemovedByCar1}`, 10, yPos); yPos += lineH; 
+            this.drawText(`P2 Hits: ${this.carsRemovedByCar2}`, 10, yPos); yPos += lineH; 
+            this.drawText(`Cars Offscreen: ${this.carsOutOfScreen}`, 10, yPos); yPos += lineH; 
+            this.drawText(`Cars On Screen: ${this.otherCars.length} / ${MAX_CARS}`, 10, yPos); yPos += lineH; 
+            this.drawText(`P1 Collisions: ${this.player1CollisionCount}`, 10, yPos); yPos += lineH; 
+            this.drawText(`P2 Collisions: ${this.player2CollisionCount}`, 10, yPos); yPos += lineH; 
+            this.drawText(`FPS: ${this.fps.toFixed(1)}`, 10, yPos); yPos += lineH; 
+            this.drawText(`P1 Bullets: ${this.bulletsCar1.length}`, 10, yPos); yPos += lineH; 
+            this.drawText(`P2 Bullets: ${this.bulletsCar2.length}`, 10, yPos); yPos += lineH; 
+        }
         update() { this.handlePlayerInput(); this.moveOtherCars(); this.roadMarkings.forEach(m => m.moveLeft(this.otherCarSpeed * 1.2)); this.checkCollisions(); this.checkBulletCollisions(); this.loadNewCars(); }
         gameLoop() {
             pollGamepads();
@@ -415,4 +445,89 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => { console.error("Error during game initialization:", error); alert(`Game setup error: ${error.message}.`); });
     }
+
+    // ==========================================
+    // --- MOBILE SCALING & TOUCH CONTROLS ---
+    // ==========================================
+
+    // 1. SCALING LOGIC
+    function scaleGame() {
+        const container = document.getElementById("gameContainer");
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+        
+        // Using the predefined constant size (1920x1080)
+        const scale = Math.min(
+            window.innerWidth / SCREEN_WIDTH,
+            window.innerHeight / SCREEN_HEIGHT
+        );
+        
+        // Always scale the gameContainer down to fit the monitor seamlessly
+        container.style.transform = `scale(${scale})`;
+
+        if (isFullscreen) {
+            document.body.classList.add('mobile-mode'); // Enable mobile controls & block drag
+        } else {
+            document.body.classList.remove('mobile-mode');
+        }
+    }
+
+    window.addEventListener("resize", scaleGame);
+    window.addEventListener("fullscreenchange", scaleGame);
+    window.addEventListener("webkitfullscreenchange", scaleGame);
+    
+    // Trigger Fullscreen
+    const mobileBtn = document.getElementById('mobile-btn');
+    if (mobileBtn) {
+        mobileBtn.addEventListener('click', () => {
+            const el = document.documentElement;
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (el.requestFullscreen) el.requestFullscreen();
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            }
+        });
+    }
+
+    // 2. TOUCH CONTROLS LOGIC (Mapping directly to P1 input via keysPressed)
+    function setupMobileControls() {
+        const addControlListener = (id, keyString) => {
+            const element = document.getElementById(id);
+            if (!element) return;
+
+            const pressKey = (e) => {
+                if(e.cancelable) e.preventDefault(); 
+                keysPressed[keyString] = true;
+            };
+            const releaseKey = (e) => {
+                if(e.cancelable) e.preventDefault();
+                keysPressed[keyString] = false;
+            };
+
+            // Touch Events
+            element.addEventListener('touchstart', pressKey, { passive: false });
+            element.addEventListener('touchend', releaseKey, { passive: false });
+            element.addEventListener('touchcancel', releaseKey, { passive: false });
+            
+            // Mouse Events (for testing touch UI on desktop)
+            element.addEventListener('mousedown', pressKey);
+            element.addEventListener('mouseup', releaseKey);
+            element.addEventListener('mouseleave', (e) => {
+                if (e.buttons === 1) releaseKey(e); 
+            });
+        };
+
+        // Map mobile buttons to game controls (Mapped to Player 1: Arrows + Space)
+        addControlListener('mobile-left', 'arrowleft');
+        addControlListener('mobile-right', 'arrowright');
+        addControlListener('mobile-up', 'arrowup');
+        addControlListener('mobile-down', 'arrowdown');
+        addControlListener('mobile-shoot', ' ');
+    }
+
+    // Initialize Scaling & Mobile Controls
+    scaleGame();
+    setupMobileControls();
+
 }); // End DOMContentLoaded listener

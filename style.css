@@ -10,11 +10,25 @@ body {
     color: #eee;
 }
 
+/* --- MOBILE MODE LOCK (Prevents dragging screen) --- */
+body.mobile-mode {
+    overflow: hidden;      /* Disables scrolling */
+    touch-action: none;    /* Disables browser gestures */
+    position: fixed;       
+    width: 100%;
+    height: 100%;
+}
+
+/* --- THE SCREEN CONTAINER --- */
 #gameContainer {
-    position: relative; /* Establishes a positioning context for children */
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Force to canvas size so scaling acts as the sole resize mechanic */
+    width: 1920px;
+    height: 1080px;
+    transform-origin: center center;
 }
 
 #gameHeader {
@@ -24,11 +38,10 @@ body {
     width: 100%;
     z-index: 10;
     display: flex;
-    justify-content: center; /* Center the main child (the h1) */
+    justify-content: center;
     align-items: center;
     padding: 15px 25px;
     box-sizing: border-box;
-    /* Allows clicks to pass through the header area to the canvas below */
     pointer-events: none;
 }
 
@@ -37,22 +50,21 @@ h1 {
     color: #eee;
     font-size: 2em;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-    opacity: 0.7; /* Make the title 70% opaque (30% transparent) */
+    opacity: 0.7;
 }
 
 #headerButtons {
-    /* This container will hold our buttons */
     position: absolute;
-    right: 25px; /* Align with header's right padding */
-    top: 50%; /* Center vertically within the header bar */
-    transform: translateY(-50%); /* Fine-tune vertical alignment */
+    right: 25px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
-    gap: 10px; /* Space between buttons */
-    pointer-events: auto; /* Re-enable pointer events for the container */
+    gap: 10px;
+    pointer-events: auto;
 }
 
-
-#helpButton, #customizeButton {
+/* Main UI Buttons */
+#helpButton, #customizeButton, #mobile-btn {
     background-color: rgba(0,0,0,0.5);
     border: 1px solid #777;
     color: #ccc;
@@ -61,15 +73,26 @@ h1 {
     font-size: 1em;
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
+    pointer-events: auto; /* Allow clicks */
 }
 
-#helpButton:hover, #customizeButton:hover {
+#helpButton:hover, #customizeButton:hover, #mobile-btn:hover {
     background-color: rgba(255, 255, 255, 0.2);
     color: #fff;
 }
 
+/* Specific position for Fullscreen button */
+#mobile-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 20;
+}
 
-.menu-overlay { /* Renamed from #helpMenu to be reusable */
+/* Hide the toggle button when in mobile mode */
+body.mobile-mode #mobile-btn { display: none; }
+
+.menu-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -80,7 +103,7 @@ h1 {
     padding: 20px 40px;
     color: #eee;
     text-align: left;
-    z-index: 200; /* Ensure it's on top of everything */
+    z-index: 200;
     min-width: 350px;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     line-height: 1.8;
@@ -108,10 +131,7 @@ h1 {
     text-align: center;
 }
 
-/* Customization Menu Specific Styles */
-#customizeMenu {
-    min-width: 450px;
-}
+#customizeMenu { min-width: 450px; }
 
 .setting-row, .slider-container {
     display: flex;
@@ -120,70 +140,101 @@ h1 {
     margin-bottom: 15px;
 }
 
-.slider-container label {
-    flex-basis: 40%;
-}
-
-.slider-container input[type="range"] {
-    flex-grow: 1;
-    margin: 0 10px;
-}
-
-.slider-value {
-    min-width: 40px;
-    text-align: right;
-    font-weight: bold;
-    color: #aed6f1;
-}
+.slider-container label { flex-basis: 40%; }
+.slider-container input[type="range"] { flex-grow: 1; margin: 0 10px; }
+.slider-value { min-width: 40px; text-align: right; font-weight: bold; color: #aed6f1; }
 
 #newGameButton {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    font-size: 1.1em;
-    background-color: #28a745;
-    border: 1px solid #218838;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    display: block; width: 100%; padding: 12px; font-size: 1.1em;
+    background-color: #28a745; border: 1px solid #218838; color: white;
+    border-radius: 5px; cursor: pointer; transition: background-color 0.2s;
 }
 
-#newGameButton:hover {
-    background-color: #218838;
-}
+#newGameButton:hover { background-color: #218838; }
 
-.hidden {
-    display: none;
-}
+.hidden { display: none; }
 
 canvas {
     border: 1px solid black;
     background-color: #0000ff;
-    max-width: 100%;
-    max-height: 100vh; /* Allow canvas to fill the container */
     display: block;
+    width: 1920px;
+    height: 1080px;
 }
 
-/* Added styles for the about info in the help menu */
 .about-info {
-    text-align: center;
-    font-size: 0.9em;
-    color: #bbb;
-    margin-top: 15px;
-    line-height: 1.5;
+    text-align: center; font-size: 0.9em; color: #bbb;
+    margin-top: 15px; line-height: 1.5;
 }
 
-.about-info p {
-    margin: 5px 0;
+.about-info p { margin: 5px 0; }
+.about-info a { color: #aed6f1; text-decoration: none; font-weight: bold; }
+.about-info a:hover { text-decoration: underline; }
+
+/* ======================================= */
+/* --- MOBILE CONTROLS OVERLAY STYLES ---  */
+/* ======================================= */
+
+#mobile-controls {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; /* Let touches fall through to game unless on a button */
+    z-index: 3000;
+    display: none;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-.about-info a {
-    color: #aed6f1;
-    text-decoration: none;
-    font-weight: bold;
+body.mobile-mode #mobile-controls {
+    display: flex;
 }
 
-.about-info a:hover {
-    text-decoration: underline;
+.mobile-control-btn {
+    pointer-events: auto; /* Re-enable clicks for buttons */
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.15);
+    border: 3px solid rgba(255,255,255,0.4);
+    border-radius: 50%;
+    color: white;
+    font-size: 35px;
+    display: flex; justify-content: center; align-items: center;
+    user-select: none;
+    backdrop-filter: blur(4px);
+    -webkit-tap-highlight-color: transparent; /* Prevents blue tap flash on mobile */
+}
+
+.mobile-control-btn:active { 
+    background: rgba(255,255,255,0.4); 
+    transform: scale(0.95);
+}
+
+/* Control Panel Layouts */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; /* Spacing between top and bottom rows */
+    margin-bottom: 20px;
+}
+
+#mobile-left-panel {
+    margin-left: 30px;
+}
+
+#mobile-right-panel {
+    margin-right: 30px;
+}
+
+/* Specific Row Spacing */
+.action-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.dpad-row {
+    display: flex;
+    gap: 20px; /* Spacing between Left and Right buttons */
 }

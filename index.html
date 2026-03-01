@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CRITICAL: Prevents zooming and enables proper touch scaling on mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pikkuautot (HTML5 Canvas)</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="gameContainer">
+        
+        <!-- Mobile/Fullscreen Button moved to Top Left -->
+        <button id="mobile-btn">📱 Fullscreen</button>
+
         <!-- This header is an overlay on top of the canvas -->
         <div id="gameHeader">
             <h1>Pikkuautot</h1>
@@ -70,6 +75,28 @@
             <hr>
             <button id="newGameButton">Start New Game</button>
             <p class="close-customize">(Press C or click button to close)</p>
+        </div>
+
+    </div>
+
+    <!-- Touch Controls Overlay (Only appears in Fullscreen / Mobile Mode) -->
+    <div id="mobile-controls">
+        
+        <!-- LEFT SIDE: Up and Down -->
+        <div id="mobile-left-panel" class="control-panel">
+            <button id="mobile-up" class="mobile-control-btn">▲</button>
+            <button id="mobile-down" class="mobile-control-btn">▼</button>
+        </div>
+        
+        <!-- RIGHT SIDE: Fire (Top) and Left/Right (Bottom) -->
+        <div id="mobile-right-panel" class="control-panel">
+            <div class="action-row">
+                <button id="mobile-shoot" class="mobile-control-btn">🔥</button>
+            </div>
+            <div class="dpad-row">
+                <button id="mobile-left" class="mobile-control-btn">◀</button>
+                <button id="mobile-right" class="mobile-control-btn">▶</button>
+            </div>
         </div>
 
     </div>
